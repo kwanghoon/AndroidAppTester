@@ -1,0 +1,30 @@
+name:           AssertIntentParser
+version:        0.1
+cabal-version:  >=1.2
+build-type:     Simple
+author:         kmp
+
+executable AssertIntentParser
+  hs-source-dirs:  src
+  build-depends:   
+                   base >= 4,
+                   Cabal >=1.18.1 && <1.19,
+                   checkers >=0.4.2 && <0.5,
+                   QuickCheck >=2.8 && <2.9,
+                   random >=1.0.1 && <1.1
+  ghc-options:     -Wall
+  other-modules:   
+                   ActionElements,
+                   CategoryElements,
+                   ComponentsElements,
+                   DataElements,
+                   ExtraElements,
+                   FlagElements,
+                   IntentParser,
+                   IntentParserWithDataStructure,
+                   IntentParserWithQuickCheckForSemanticData,
+                   QuickCheck,
+                   Test,
+                   TypeElements
+  main-is:         Main.hs
+
