@@ -122,7 +122,7 @@ public class BenchAdd extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
 				
-				String command = System.getProperty("user.dir") + "/makeAdbCommand.exe "; 
+				String command = System.getProperty("user.dir") + "/makeAdbCommand.exe AdbCommand "; 
 				
 				
 				String intentSepc = txtIntentSpec.getText();

@@ -25,6 +25,8 @@ executable AssertIntentParser
                    IntentParserWithQuickCheckForSemanticData,
                    QuickCheck,
                    Test,
-                   TypeElements
+                   TypeElements,
+                   IntentSpec,
+                   GenAndroidTestCode
   main-is:         Main.hs
 

@@ -23,6 +23,9 @@ import FlagElements
 
 import Data.Char
 import Control.Monad
+
+import IntentSpec
+import GenAndroidTestCode
   
 infixr 5 +++
 
@@ -507,16 +510,6 @@ eval xs = case parse intent xs of
                [] -> error "invalid input"
 
 
-
-type IntentSpec = [Intent]
-type Intent = [Field]
-data Field = Action String | Category [String] | Data String | Type String 
-             | Component String String | Extra [(String, ExtraType)] | Flag [String] deriving (Show, Eq)
-
-data ExtraType = StringType String | BooleanType Bool | IntegerType Int | LongType Integer | FloatType Float
-                 | UriType String | ComponentType String String
-                 | IntArray [Int] | LongArray [Integer] | FloatArray [Float] deriving (Show, Eq)
-
 instance Arbitrary Field where
   arbitrary = do n <- choose (1,14) :: Gen Int
                  case n of
@@ -701,21 +694,40 @@ randomOnly :: Int -> IntentSpec -> IntentSpec
 randomOnly _ [] = []
 randomOnly count (s:ss) = (replaceComponent s (makeTestCaseOfIntentSpec count)) ++ randomOnly count ss
 
-make :: Int -> Int -> Int -> String -> IO ()
-make 0 component count spec = putStr (makeAdbCommand component randomIntent)
-                                 where inputSpec = (eval spec)
-                                       randomIntent = removeDuplicateConstructorIntentSpec (passOnly count inputSpec)
-make 1 component count spec = putStr (makeAdbCommand component randomIntent)
-                                 where inputSpec = (eval spec)
-                                       randomIntent = removeDuplicateConstructorIntentSpec (randomUsingSpec count inputSpec)
-make 2 component count spec = putStr (makeAdbCommand component randomIntent)
-                                 where inputSpec = (eval spec)
-                                       randomIntent = removeDuplicateConstructorIntentSpec (randomOnly count inputSpec)
+makeTestArtifact :: String -> Int -> IntentSpecStr -> IntentSpec -> [String] -> IO ()
+makeTestArtifact "AdbCommand" component intentSpecS intents args =
+    putStr (makeAdbCommand component intents)
+            
+makeTestArtifact "AndroidTestCode" component intentSpecS intents args = 
+    genAndroidTestCode component intentSpecS intents args
+    
+--    
+type RandomType = Int
+type IntentSpecStr = String
+type Count = Int
+type ArtifactType = String
+type ComponentType = Int
+
+make :: ArtifactType -> RandomType -> ComponentType -> Count -> IntentSpecStr -> [String] -> IO ()
+make artifactType randomType component count intentSpecS args
+    | randomType==0 = 
+        let intents = removeDuplicateConstructorIntentSpec 
+                        (passOnly count (eval intentSpecS)) 
+        in  makeTestArtifact artifactType component intentSpecS intents args
+    | randomType==1 = 
+        let intents = removeDuplicateConstructorIntentSpec 
+                        (randomUsingSpec count (eval intentSpecS)) 
+        in  makeTestArtifact artifactType component intentSpecS intents args
+    | randomType==2 = 
+        let intents = removeDuplicateConstructorIntentSpec 
+                        (randomOnly count (eval intentSpecS)) 
+        in  makeTestArtifact artifactType component intentSpecS intents args
 
 main :: IO ()
 main = do hSetEncoding stdout utf8
           args <- getArgs
-          make (castInt 0 args) (castInt 1 args) (castInt 2 args) (last args)
+          -- artifact type, random type, component type, count, intent spec,
+          make  (args !! 0) (castInt 1 args) (castInt 2 args) (castInt 3 args) (args !! 4) (drop 5 args)
 
 castInt :: Int -> [String] -> Int
 castInt 0 (arg:args) = read arg :: Int
@@ -723,6 +735,6 @@ castInt n (arg:args) = castInt (n-1) args
 
 
 -- >ghc --make Main.hs
-
+-- :set args AndroidTestCode 0 0 5 "{ cmp=com.example.android.notepad/.NoteEditor act=android.intent.action.MAIN }" com.example.khchoi.helloandroid MainActivity C:\\ 0001
 
 
