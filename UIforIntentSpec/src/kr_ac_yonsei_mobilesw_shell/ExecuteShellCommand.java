@@ -1,4 +1,4 @@
-package kr_ac_yonsei_mobilesw_shall;
+package kr_ac_yonsei_mobilesw_shell;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
