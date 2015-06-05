@@ -19,9 +19,10 @@ A sample test code for Activity
    1) 패키지 이름 : PKG_NAME (e.g., com.example.khchoi.helloandroid) 
    2) 테스트 대상 Activity 클래스 이름 : CLASS_NAME  (e.g., MainActivity)
    3) 디렉토리 위치 : PROJECT_HOME  (e.g., D:\khcohi\Android\AndroidStudioProjects\HelloAndroid)
+   4) SUFFIX (e.g., 0001)
 
 출력:
-   1) 테스트 클래스 이름 : TEST_CLASS_NAME (e.g., ${CLASS_NAME}TEST)
+   1) 테스트 클래스 이름 : TEST_CLASS_NAME (e.g., ${CLASS_NAME}TEST_${SUFFIX})
    2) 파일 : ${PROJECT_HOME}\app\src\androidTest\java\패키지명에 해당하는 경로{com\example\khchoi\helloandroid}\${TEST_CLASS_NAME}.java
    3) 파일 내용
 
@@ -57,19 +58,23 @@ public class ${TEST_CLASS_NAME} extends ActivityUnitTestCase<${CLASS_NAME}> {
 ---------------------------------------------------------------------------------------}
 
 genActivityTestCode :: IntentSpec -> [String] -> IO ()
-genActivityTestCode is args =
-    genActivityTestCode' pkg_name test_class_name class_name prj_home is
+genActivityTestCode is args = do
+    compUnit <- genActivityTestCode' pkg_name test_class_name class_name is
+    writeFile outputPath (prettyPrint compUnit)
+    -- putStrLn $ prettyPrint $ compUnit
+    -- mapM_ (putStrLn . show) is
     where pkg_name   = args !! 0
           class_name = args !! 1
-          prj_home   = args !! 2
-          suffix     = args !! 3
+          suffix     = args !! 2
+          output     = args !! 3
+          
           _suffix    = if suffix == "" then suffix else "_" ++ suffix
           test_class_name = class_name ++ "Test" ++ _suffix
+          outputPath = output ++ test_class_name ++ ".java"  
           
           
-genActivityTestCode' pkg_name test_class_name class_name prj_home is = do
-    putStrLn $ prettyPrint $ compUnit
-    mapM_ (putStrLn . show) is
+genActivityTestCode' pkg_name test_class_name class_name is = do
+    return compUnit
     where
         pkg_name_ids = map Ident (pkgnameToIds pkg_name)
         compUnit = CompilationUnit (Just $ PackageDecl $ Name pkg_name_ids)
@@ -87,25 +92,27 @@ genActivityTestCode' pkg_name test_class_name class_name prj_home is = do
                         (ConstructorBody (Just (SuperInvoke [] 
                             [ClassLit (Just (RefType (ClassRefType (ClassType [(Ident class_name, [])]))))] )) []))
                             
-genActivityTestMethodCode pkg_name test_class_name class_name is = map testMethod $ zip is [1..]
+genActivityTestMethodCode pkg_name test_class_name class_name is = 
+    map (\pair -> testMethod pair startactivity) $ zip is [1..]
+    where
+        startactivity = BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident "startActivity"]) 
+                            [ExpName (Name [Ident locVarintent]),Lit Null,Lit Null]))) 
         
 locVarintent = "intent"
         
-testMethod (fields, num) =
+testMethod :: ([Field], Int) -> BlockStmt -> Decl        
+testMethod (fields, num) activation =
     MemberDecl 
         (MethodDecl [Public] [] Nothing (Ident ("testcase" ++ show num)) [] [] 
-            (MethodBody (Just (Block $ mkTrycatch $
+            (MethodBody (Just (Block $ 
                 [
                     LocalVars [] (RefType (ClassRefType (ClassType [(Ident "Intent",[])]))) 
                         [VarDecl (VarId (Ident locVarintent)) 
                         (Just (InitExp (InstanceCreation [] (ClassType [(Ident "Intent",[])]) [] Nothing)))]
                 ]  ++  concat (map testStmt fields)
-                   ++  [ startactivity ] 
+                   ++  [ activation ] 
                 ))) )
-                
-    where
-        startactivity = BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident "startActivity"]) 
-                            [ExpName (Name [Ident locVarintent]),Lit Null,Lit Null]))) 
+
                             
 mkTrycatch :: [BlockStmt] -> [BlockStmt]
 mkTrycatch blockstmts = 
@@ -121,7 +128,7 @@ testStmt (Category categories) =
     map (\category -> 
         BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident locVarintent,Ident "addCategory"]) 
             [Lit (String category)])))) categories
-testStmt (Data uri) = 
+testStmt (Data uri) = mkTrycatch
      [BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident locVarintent,Ident "setData"]) 
         [MethodInv (MethodCall (Name [Ident "Uri",Ident "parse"]) [Lit (String uri)])])))]
 testStmt (Type t) =
@@ -153,7 +160,7 @@ testStmtExtra (key, LongType long) =
 testStmtExtra (key, FloatType float) =
     [ BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident locVarintent,Ident "putExtra"]) 
         [Lit (String key), Lit (Float (read $ show $ float))]))) ]
-testStmtExtra (key, UriType uri) =
+testStmtExtra (key, UriType uri) = mkTrycatch
     [BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident "intent",Ident "putExtra"]) 
         [Lit (String key),
          MethodInv (MethodCall (Name [Ident "URI",Ident "create"]) [Lit (String uri)])])))]
@@ -178,22 +185,34 @@ testStmtExtra (key, FloatArray floats) =
             ArrayCreateInit (PrimType FloatT) 1 
                 ( ArrayInit $  map (\float -> InitExp $ Lit $ Float (read $ show $ float)) floats )])))]
 
+---------------------------------------------------------------------------------------
         
 genBroadcastReceiverTestCode :: IntentSpec -> [String] -> IO ()
 genBroadcastReceiverTestCode is args = putStrLn "*** Not support for generating Broadcast Receiver test code"
 
-{- A sample test code for Service
+{---------------------------------------------------------------------------------------  
+입력: 
+   1) 패키지 이름 : PKG_NAME (e.g., com.example.khchoi.helloandroid) 
+   2) 테스트 대상 Service 클래스 이름 : CLASS_NAME  (e.g., MyService)
+   3) 디렉토리 위치 : PROJECT_HOME  (e.g., D:\khcohi\Android\AndroidStudioProjects\HelloAndroid)
+   4) SUFFIX (e.g., 0001)
+
+출력:
+   1) 테스트 클래스 이름 : TEST_CLASS_NAME (e.g., ${CLASS_NAME}TEST_${SUFFIX})
+   2) 파일 : ${PROJECT_HOME}\app\src\androidTest\java\패키지명에 해당하는 경로{com\example\khchoi\helloandroid}\${TEST_CLASS_NAME}.java
+   3) 파일 내용
 
 // MyServiceTest_00001.java
 
-package com.example.khchoi.helloandroid;
+package ${PKG_NAME};
 
 import android.content.Intent;
 import android.test.ServiceTestCase;
+... 추가 필요 ...
 
-public class MyServiceTest extends ServiceTestCase<MyService> {
-    public MyServiceTest() {
-        super(MyService.class);
+public class ${TEST_CLASS_NAME} extends ServiceTestCase<${CLASS_NAME}> {
+    public ${TEST_CLASS_NAME}() {
+        super(${CLASS_NAME}.class);
     }
 
     @Override
@@ -202,10 +221,11 @@ public class MyServiceTest extends ServiceTestCase<MyService> {
         setupService();
     }
 
-    public void testActivatingMyService() throws Exception {
-        Intent serviceIntent = new Intent(getContext(), MyService.class);
-
+    public void test_NNNNN() throws Exception {
+        Intent serviceIntent = new Intent();
+        serviceIntent.setClassName("${PKG_NAME}","${PKG_NAME}.${CLASS_NAME}");
         serviceIntent.setAction("my action");
+        ... 주어진 intent에 따라 적절한 코드 생성 ... 
         startService(serviceIntent);
     }
 
@@ -217,11 +237,59 @@ public class MyServiceTest extends ServiceTestCase<MyService> {
 }
 
 
--}
+---------------------------------------------------------------------------------------}
 
 genServiceTestCode :: IntentSpec -> [String] -> IO ()
-genServiceTestCode is args = putStrLn ""
+genServiceTestCode is args = do
+    compUnit <- genServiceTestCode' pkg_name test_class_name class_name is
+    writeFile outputPath (prettyPrint compUnit)
+    -- putStrLn $ prettyPrint $ compUnit
+    -- mapM_ (putStrLn . show) is
+    where pkg_name   = args !! 0
+          class_name = args !! 1
+          suffix     = args !! 2
+          output     = args !! 3
+          
+          _suffix    = if suffix == "" then suffix else "_" ++ suffix
+          test_class_name = class_name ++ "Test" ++ _suffix
+          outputPath = output ++ test_class_name ++ ".java"
 
+genServiceTestCode' pkg_name test_class_name class_name is = do
+    return compUnit
+    where
+        pkg_name_ids = map Ident (pkgnameToIds pkg_name)
+        compUnit = CompilationUnit (Just $ PackageDecl $ Name pkg_name_ids)
+                    [ ImportDecl False (Name [Ident "android", Ident "content", Ident "Intent"]) False
+                    , ImportDecl False (Name [Ident "android", Ident "content", Ident "ComponentName"]) False
+                    , ImportDecl False (Name [Ident "android", Ident "test", Ident "ServiceTestCase"]) False
+                    , ImportDecl False (Name [Ident "android", Ident "net", Ident "Uri"]) False
+                    , ImportDecl False (Name [Ident "java", Ident "net", Ident "URI"]) False
+                    ]
+                    [ClassTypeDecl (ClassDecl [Public] (Ident test_class_name) [] 
+                        (Just (ClassRefType (ClassType [(Ident "ServiceTestCase",
+                                    [ActualType (ClassRefType (ClassType [(Ident class_name, [])]))])]))) [] 
+                        (ClassBody (constr : setup : teardown 
+                                        : genServiceTestMethodCode pkg_name test_class_name class_name is)))]
+        constr = MemberDecl (ConstructorDecl [Public] [] (Ident test_class_name) [] []
+                        (ConstructorBody (Just (SuperInvoke [] 
+                            [ClassLit (Just (RefType (ClassRefType (ClassType [(Ident class_name, [])]))))] )) []))
+        setup = MemberDecl (MethodDecl [Public] [] Nothing (Ident "setUp") [] 
+                        [ClassRefType (ClassType [(Ident "Exception",[])])] 
+                        (MethodBody (Just (Block 
+                            [BlockStmt (ExpStmt (MethodInv (SuperMethodCall [] (Ident "setUp") []))),
+                             BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident "setupService"]) [])))]))))
+        teardown = MemberDecl (MethodDecl [Public] [] Nothing (Ident "tearDown") [] 
+                        [ClassRefType (ClassType [(Ident "Exception",[])])] 
+                        (MethodBody (Just (Block 
+                            [BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident "shutdownService"]) []))),
+                             BlockStmt (ExpStmt (MethodInv (SuperMethodCall [] (Ident "tearDown") []))) ] ))))
+          
+genServiceTestMethodCode pkg_name test_class_name class_name is = 
+    map (\pair -> testMethod pair startservice) $ zip is [1..]
+    where
+        startservice = BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident "startService"]) 
+                            [ExpName (Name [Ident locVarintent])]))) 
+                            
 -- Utility Functions
 
 pkgnameToIds :: String -> [String]
@@ -235,6 +303,6 @@ pkgnameToIds pkg_name = h : pkgnameToIds t
 test = case parser compilationUnit "import java.util.*; public class MyClass extends Object { public MyClass() { super(MainActivity.class); } }" of
         Left err -> putStrLn (show err)
         Right cu -> putStrLn $ (show cu)
-test1 = case parser compilationUnit "public class MyClass { public void test1() { try {  } catch(Throwable t) { } } }" of
+test1 = case parser compilationUnit "public class MyClass { public void setUp() throws Exception { super.setUp(); setupService(); } }" of
         Left err -> putStrLn (show err)
         Right cu -> putStrLn $ (show cu)

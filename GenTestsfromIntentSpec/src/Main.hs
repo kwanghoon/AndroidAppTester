@@ -735,6 +735,8 @@ castInt n (arg:args) = castInt (n-1) args
 
 
 -- >ghc --make Main.hs
--- :set args AndroidTestCode 0 0 5 "{ cmp=com.example.android.notepad/.NoteEditor act=android.intent.action.MAIN }" com.example.khchoi.helloandroid MainActivity C:\\ 0001
+
+-- :set args AndroidTestCode 0 0 5 "{ cmp=com.example.khchoi.helloandroid/.MainActivity act=android.intent.action.MAIN }" com.example.khchoi.helloandroid MainActivity 0002 D:\TEMP\
+-- :set args AndroidTestCode 0 2 5 "{ cmp=com.example.khchoi.helloandroid/.MyService act=android.intent.action.MAIN }" com.example.khchoi.helloandroid MyService 0001 D:\TEMP\
 
 
