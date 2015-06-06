@@ -62,6 +62,22 @@ public class BenchAdd extends JFrame {
 	private static final Logger logger = Logger.getLogger(Benchmark.class.getName());
 	private FileHandler fileHandler;
 
+	private static String genCommand;
+	
+	static {
+		String osName = System.getProperty("os.name");
+		String osNameMatch = osName.toLowerCase();
+		if(osNameMatch.contains("linux")) {
+			genCommand = "gen_linux";
+		} else if(osNameMatch.contains("windows")) {
+			genCommand = "gen.exe";
+		} else if(osNameMatch.contains("mac os") || osNameMatch.contains("macos") || osNameMatch.contains("darwin")) {
+			genCommand = "gen_mac";
+		}else {
+			genCommand = "gen.exe"; // Windows OS by default
+		}
+	}
+	
 	/**
 	 * Launch the application.
 	 */
@@ -135,7 +151,8 @@ public class BenchAdd extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
 				
-				String command = System.getProperty("user.dir") + "/makeAdbCommand.exe "; 
+				String command = System.getProperty("user.dir") 
+						+ "/../GenTestsfromIntentSpec/bin/" + genCommand + " AdbCommand "; 
 				
 				
 				String intentSepc = txtIntentSpec.getText();
@@ -148,10 +165,14 @@ public class BenchAdd extends JFrame {
 					intentSepc = intentSepc + "\""; 
 				}
 				
+
+				
 				command = command + cboMakeMode.getSelectedIndex() + " " +
 								    cboComponent.getSelectedIndex() + " " +
 								    txtCount.getText() + " " +
 								    intentSepc + " ";
+				
+				System.out.println("RUN: " + command);
 				
 				ExecuteShellCommand.executeMakeAdbCommand(BenchAdd.this, command);
 			}
@@ -249,7 +270,7 @@ public class BenchAdd extends JFrame {
 				ExecuteShellCommand.executeImportIntentSpecCommand(BenchAdd.this, command);
 			}
 		});
-		btnImportFromApk.setBounds(919, 58, 295, 30);
+		btnImportFromApk.setBounds(955, 58, 259, 30);
 		contentPane.add(btnImportFromApk);
 		
 		JButton btnClear = new JButton("Clear");
@@ -260,6 +281,15 @@ public class BenchAdd extends JFrame {
 		});
 		btnClear.setBounds(140, 71, 97, 23);
 		contentPane.add(btnClear);
+		
+		JButton btnClear_1 = new JButton("Clear");
+		btnClear_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				txtAdbCommand.setText("");
+			}
+		});
+		btnClear_1.setBounds(130, 335, 97, 23);
+		contentPane.add(btnClear_1);
 		
 		
 	}
