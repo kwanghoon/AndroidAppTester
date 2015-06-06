@@ -30,7 +30,7 @@ import javax.swing.JTextField;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JLabel;
 
-import kr_ac_yonsei_mobilesw_shall.ExecuteShellCommand;
+import kr_ac_yonsei_mobilesw_shell.ExecuteShellCommand;
 
 import javax.swing.JCheckBox;
 
@@ -122,7 +122,7 @@ public class BenchAdd extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
 				
-				String command = System.getProperty("user.dir") + "/makeAdbCommand.exe AdbCommand "; 
+				String command = System.getProperty("user.dir") + "/makeAdbCommand.exe "; 
 				
 				
 				String intentSepc = txtIntentSpec.getText();

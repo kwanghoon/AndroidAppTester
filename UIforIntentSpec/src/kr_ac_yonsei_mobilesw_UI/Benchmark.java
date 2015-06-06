@@ -25,7 +25,7 @@ import javax.swing.JTextField;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import kr_ac_yonsei_mobilesw_shall.ExecuteShellCommand;
+import kr_ac_yonsei_mobilesw_shell.ExecuteShellCommand;
 
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
