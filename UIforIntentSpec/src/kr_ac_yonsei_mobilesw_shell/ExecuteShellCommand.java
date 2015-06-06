@@ -164,4 +164,44 @@ public class ExecuteShellCommand {
 		worker.start();
 	}
 	
+	public static void executeImportIntentSpecCommand(BenchAdd ui, String command) 
+	{		
+		Thread worker = new Thread()
+		{
+			public void run()
+			{
+				Process p = null;
+				try {					
+					p = Runtime.getRuntime().exec(command);
+					
+					//ui.appendTxt_adbCommand("> " + command);
+					
+					while(p.isAlive())
+					{
+						BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+						String line = "";
+						
+						while ((line = reader.readLine())!= null) 
+						{
+							if(line.equals("") == false)
+							{
+								ui.appendTxt_intentSpec(line + "\n");
+							}
+						}
+					}
+					
+					ui.done_intentSpec();
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+				
+				p.destroy();
+			}
+		};
+		
+		worker.start();
+	}
+	
 }

@@ -6,6 +6,7 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -17,6 +18,7 @@ import javax.swing.ScrollPaneConstants;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
@@ -24,6 +26,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JFileChooser;
 import javax.swing.JSplitPane;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
@@ -34,17 +37,27 @@ import kr_ac_yonsei_mobilesw_shell.ExecuteShellCommand;
 
 import javax.swing.JCheckBox;
 
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
 public class BenchAdd extends JFrame {
 
 	private JPanel contentPane;
 	private static Benchmark benchmarkUI;
 	private JTextArea txtAdbCommand;
-	private JTextField txtIntentSpec;
+	private JTextArea txtIntentSpec;
 	private JTextField txtCount;
 	private JComboBox cboComponent;
 	private JComboBox cboMakeMode;
 	private JCheckBox chkExtraValueReplace;
+	
 	private Random rand = new Random(System.currentTimeMillis());
+	
+	private JButton btnImportFromApk;
+	private final static String labelBtnImport = "Import Intent Specification from APK";
+	private final static String labelBtnImporting = "Importing ...";
+	
+	private JFileChooser fc = new JFileChooser();
 	
 	private static final Logger logger = Logger.getLogger(Benchmark.class.getName());
 	private FileHandler fileHandler;
@@ -85,7 +98,7 @@ public class BenchAdd extends JFrame {
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		scrollPane.setBounds(12, 71, 1219, 591);
+		scrollPane.setBounds(12, 360, 1219, 302);
 		contentPane.add(scrollPane);
 		
 		txtAdbCommand = new JTextArea();
@@ -117,7 +130,7 @@ public class BenchAdd extends JFrame {
 		cboComponent.setBounds(158, 31, 129, 30);
 		contentPane.add(cboComponent);
 		
-		JButton btnMake = new JButton("make");
+		JButton btnMake = new JButton("Generate ADB Commands");
 		btnMake.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
@@ -143,12 +156,19 @@ public class BenchAdd extends JFrame {
 				ExecuteShellCommand.executeMakeAdbCommand(BenchAdd.this, command);
 			}
 		});
-		btnMake.setBounds(1132, 31, 99, 30);
+		btnMake.setBounds(487, 31, 220, 30);
 		contentPane.add(btnMake);
 		
-		txtIntentSpec = new JTextField();
-		txtIntentSpec.setBounds(487, 33, 639, 28);
-		contentPane.add(txtIntentSpec);
+		JScrollPane scrollPane_1 = new JScrollPane();
+		scrollPane_1.setBounds(12, 98, 1219, 227);
+		scrollPane_1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane_1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		contentPane.add(scrollPane_1);
+		
+		txtIntentSpec = new JTextArea();
+		//txtIntentSpec.setBounds(12, 98, 1219, 97);
+		//contentPane.add(txtIntentSpec);
+		scrollPane_1.setViewportView(txtIntentSpec);
 		
 		cboMakeMode = new JComboBox();
 		cboMakeMode.setModel(new DefaultComboBoxModel(new String[] {"Compatible", "Shape-Compatible", "Random"}));
@@ -172,20 +192,92 @@ public class BenchAdd extends JFrame {
 		lblCount.setBounds(299, 10, 75, 20);
 		contentPane.add(lblCount);
 		
-		JLabel lblIntentspec = new JLabel("IntentSpec :");
-		lblIntentspec.setBounds(487, 10, 82, 20);
+		JLabel lblIntentspec = new JLabel("Intent Specification :");
+		lblIntentspec.setBounds(12, 71, 134, 20);
 		contentPane.add(lblIntentspec);
 		
 		chkExtraValueReplace = new JCheckBox("ExtraValueReplace");
 		chkExtraValueReplace.setSelected(true);
 		chkExtraValueReplace.setBounds(879, 676, 134, 23);
 		contentPane.add(chkExtraValueReplace);
+		
+		JLabel lblAdbCommands = new JLabel("ADB Commands : ");
+		lblAdbCommands.setBounds(12, 335, 106, 15);
+		contentPane.add(lblAdbCommands);
+		
+		fc.addChoosableFileFilter(new APKFilter());
+		fc.setAcceptAllFileFilterUsed(false);
+		
+		btnImportFromApk = new JButton(labelBtnImport);
+		btnImportFromApk.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				//fc = new JFileChooser();
+				// fc.addChoosableFileFilter(new APKFilter());
+				// fc.setAcceptAllFileFilterUsed(false);
+
+				int returnVal = fc.showOpenDialog(BenchAdd.this);
+				
+				File file;
+				
+		        if (returnVal != JFileChooser.APPROVE_OPTION) {
+		        	return;
+		        }
+		        
+		        file = fc.getSelectedFile();
+				
+				// Activity, Service, Broadcast Receiver 선택된 컴포넌트 타입의 Intent Spec을 가져오기
+				String compTypeOption = "-all";
+				int cbo = cboComponent.getSelectedIndex();
+				switch (cbo) {
+				case 0: compTypeOption = "-activity";
+						break;
+				case 1: return; // Not support for Broadcast Receiver type
+				case 2: compTypeOption = "-service";
+						break;
+				}
+				
+				
+				String command = "java -cp " + System.getProperty("user.dir") 
+									+ "/../GenIntentSpecfromAPK/bin/GenIntentSpecfromAPK.jar com.example.java.GenIntentSpecFromAPK " 
+									+ compTypeOption + " " 
+									+ "\"" + file.getAbsolutePath() + "\""; // ' ' in the file name
+				
+				System.out.println("RUN: " + command);
+				
+				btnImportFromApk.setText(labelBtnImporting);
+				ExecuteShellCommand.executeImportIntentSpecCommand(BenchAdd.this, command);
+			}
+		});
+		btnImportFromApk.setBounds(919, 58, 295, 30);
+		contentPane.add(btnImportFromApk);
+		
+		JButton btnClear = new JButton("Clear");
+		btnClear.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				txtIntentSpec.setText("");
+			}
+		});
+		btnClear.setBounds(140, 71, 97, 23);
+		contentPane.add(btnClear);
+		
+		
 	}
 	
 	public void appendTxt_adbCommand(String str)
 	{
 		txtAdbCommand.append(str);
 		txtAdbCommand.setCaretPosition(txtAdbCommand.getCaretPosition() + str.length());
+	}
+	
+	public void appendTxt_intentSpec(String str)
+	{
+		txtIntentSpec.append(str);
+		txtIntentSpec.setCaretPosition(txtIntentSpec.getCaretPosition() + str.length());
+	}
+	
+	public void done_intentSpec() {
+		btnImportFromApk.setText(labelBtnImport);
 	}
 	
 	public void Close()
@@ -435,5 +527,43 @@ public class BenchAdd extends JFrame {
             logger.log(Level.SEVERE, null, ex);
         }
         logger.addHandler(fileHandler);
+    }
+    
+    private class APKFilter extends FileFilter {
+    	 
+        //Accept all directories and all apk files.
+        public boolean accept(File f) {
+            if (f.isDirectory()) {
+                return true;
+            }
+     
+            String extension = getExtension(f);
+            if (extension != null) {
+            	return extension.equals(apk);
+            }
+     
+            return false;
+        }
+     
+        //The description of this filter
+        public String getDescription() {
+            return "Just APKs";
+        }
+        
+        public final static String apk = "apk";
+        
+        /*
+         * Get the extension of a file.
+         */
+        public String getExtension(File f) {
+            String ext = null;
+            String s = f.getName();
+            int i = s.lastIndexOf('.');
+     
+            if (i > 0 &&  i < s.length() - 1) {
+                ext = s.substring(i+1).toLowerCase();
+            }
+            return ext;
+        }
     }
 }

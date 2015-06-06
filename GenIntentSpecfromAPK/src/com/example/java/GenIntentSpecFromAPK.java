@@ -14,13 +14,17 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 public class GenIntentSpecFromAPK {
-	static ArrayList<IntentFilter> intentfiltersforActivity = new ArrayList<IntentFilter>();
-	static ArrayList<IntentFilter> intentfiltersforService = new ArrayList<IntentFilter>();
-	static ArrayList<IntentFilter> intentfiltersforReceiver = new ArrayList<IntentFilter>();
-	static int context;
-	static int count = 0;
+	private static enum Type { All, Activity, Service, BroadcastReceiver };
+	
+	private static Type requestType;
+	
+	private static ArrayList<IntentFilter> intentfiltersforActivity = new ArrayList<IntentFilter>();
+	private static ArrayList<IntentFilter> intentfiltersforService = new ArrayList<IntentFilter>();
+	private static ArrayList<IntentFilter> intentfiltersforReceiver = new ArrayList<IntentFilter>();
+	private static int context;
+	private static int count = 0;
 
-	static void find(String manifestpath) {
+	private static void find(String manifestpath) {
 		intentfiltersforActivity.clear();
 		intentfiltersforService.clear();
 		intentfiltersforReceiver.clear();
@@ -50,8 +54,8 @@ public class GenIntentSpecFromAPK {
 
 					if ("manifest".equals(name)) {
 						manifest = parser.getAttributeValue(null, "package");
-						System.out.println(manifest);
-						System.out.println("");
+						if (DEBUG) System.out.println(manifest);
+						if (DEBUG) System.out.println("");
 					}
 					if ("activity".equals(name) || "receiver".equals(name) || "service".equals(name)) {
 						if ("activity".equals(name)) {
@@ -129,61 +133,100 @@ public class GenIntentSpecFromAPK {
 			e.printStackTrace();
 		}
 		
-		for (int i = 0; i < intentfiltersforActivity.size(); i++) {
-
-			System.out.println(intentfiltersforActivity.get(i));
-			if (i != intentfiltersforActivity.size() - 1) {
-				System.out.println(" || ");
+		if (requestType == Type.All || requestType == Type.Activity) {
+			for (int i = 0; i < intentfiltersforActivity.size(); i++) {
+	
+				System.out.println(intentfiltersforActivity.get(i));
+				if (i != intentfiltersforActivity.size() - 1) {
+					System.out.println(" || ");
+				}
+				count++;
 			}
-			count++;
+			
+			if (DEBUG) System.out.println("Activity");
+			if (DEBUG) System.out.println(intentfiltersforActivity.size());
 		}
 		
-		for (int i = 0; i < intentfiltersforService.size(); i++) {
-
-			System.out.println(intentfiltersforService.get(i));
-			if (i != intentfiltersforService.size() - 1) {
-				System.out.println(" || ");
+		if (requestType == Type.All || requestType == Type.Service) {
+			for (int i = 0; i < intentfiltersforService.size(); i++) {
+	
+				System.out.println(intentfiltersforService.get(i));
+				if (i != intentfiltersforService.size() - 1) {
+					System.out.println(" || ");
+				}
+				count++;
 			}
-			count++;
+			
+			if (DEBUG) System.out.println("Service");
+			if (DEBUG) System.out.println(intentfiltersforService.size());
 		}
 	
-		for (int i = 0; i < intentfiltersforReceiver.size(); i++) {
-
-			System.out.println(intentfiltersforReceiver.get(i));
-			if (i != intentfiltersforReceiver.size() - 1) {
-				System.out.println(" || ");
+		if (requestType == Type.All || requestType == Type.BroadcastReceiver) {
+			for (int i = 0; i < intentfiltersforReceiver.size(); i++) {
+	
+				System.out.println(intentfiltersforReceiver.get(i));
+				if (i != intentfiltersforReceiver.size() - 1) {
+					System.out.println(" || ");
+				}
+				count++;
 			}
-			count++;
+			
+			if (DEBUG) System.out.println("Receiver");
+			if (DEBUG) System.out.println(intentfiltersforReceiver.size());
 		}
-		System.out.println("Activity");
-		System.out.println(intentfiltersforActivity.size());
-		System.out.println("Service");
-		System.out.println(intentfiltersforService.size());
-		System.out.println("Receiver");
-		System.out.println(intentfiltersforReceiver.size());
+		
+		if (DEBUG) System.out.println("Total count = " +count);
 	}
 
 	/*
-	 *  입력 : APK 파일의 경로
+	 *  입력 : 옵션, APK 파일의 경로
+	 *      옵션 -activity  Activity 컴포넌트를 위한 인텐트 스펙
+	 *          -service  Service 컴포넌트를 위한 인텐트 스펙
+	 *          -receiver  Broadcast Receiver 컴포넌트를 위한 인텐트 스펙
+	 *          -all 3가지 타입의 컴포넌트를 위한 인텐트 스펙
 	 *  출력 : 인텐트 스펙
 	 */
 	private final static boolean DEBUG = false;
 	private final static String apktool = "apktool_win.bat";
+
 	public static void main(String[] args) {
 
-		for (String apkfile : args) {
+		requestType = Type.All;
+		String apkfile;
+		
+		if (args.length == 2) {
+			if ( "-all".equalsIgnoreCase(args[0]) ) requestType = Type.All;
+			else if ( "-activity".equalsIgnoreCase(args[0]) ) requestType = Type.Activity;
+			else if ( "-service".equalsIgnoreCase(args[0]) ) requestType = Type.Service;
+			else if ( "-receiver".equalsIgnoreCase(args[0]) ) requestType = Type.BroadcastReceiver;
+		
+		
+			apkfile = "\"" + args[1] + "\"";	// ' ' in the file name
+			
 			try {
 				String currentWorkingDir = new File("").getAbsolutePath();
-				String command = currentWorkingDir + "/lib/" + apktool + " d -f " + apkfile;
+				if (DEBUG) System.out.println("CWD: " + currentWorkingDir);
+				
+				String command = currentWorkingDir + "/../GenIntentSpecfromAPK/lib/" + apktool + " d -f " + apkfile;
+				
+				if (DEBUG) System.out.println("CMD: " + command);
+				
 				String filenamewithExt = new File(apkfile).getName();
-				String filename = filenamewithExt.substring(0, filenamewithExt.indexOf('.'));
+				
+				if (DEBUG) System.out.println("NAMEEXT: " + filenamewithExt);
+				
+				String filename = filenamewithExt.substring(0, filenamewithExt.lastIndexOf('.'));
+				
+				if (DEBUG) System.out.println("NAME: " + filename);
+				
 				String outputDir = currentWorkingDir + "/" + filename;
+				
+				if (DEBUG) System.out.println("OUTPUT: " + outputDir);
+				
 				String xmlfile = outputDir + "/AndroidManifest.xml";
 				
-				if (DEBUG) System.out.println("CWD: " + currentWorkingDir);
-				if (DEBUG) System.out.println("CMD: " + command);
-				if (DEBUG) System.out.println("APK: " + apkfile + " " + filenamewithExt + " " + filename);
 				if (DEBUG) System.out.println("XML: " + xmlfile);
+								
 				
 				Process p = Runtime.getRuntime().exec(command);
 				
@@ -200,21 +243,19 @@ public class GenIntentSpecFromAPK {
 							if (DEBUG) System.out.println(line);
 						}
 					}
-
+	
 				}
 				
 				find(xmlfile);
 		
-				System.out.println("Total count = " +count);
-				
 				clearFolders(new File(outputDir));
-
+	
 				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		
 		}
-
 	}
 	
 	public static void clearFolders(File file) {
