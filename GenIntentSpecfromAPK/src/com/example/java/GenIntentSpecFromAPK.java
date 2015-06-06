@@ -238,33 +238,41 @@ public class GenIntentSpecFromAPK {
 				
 				if (DEBUG) System.out.println("OUTPUT: " + outputDir);
 				
-				String xmlfile = outputDir + "/AndroidManifest.xml";
+				String xmlfile;
 				
-				if (DEBUG) System.out.println("XML: " + xmlfile);
-								
-				
-				Process p = Runtime.getRuntime().exec(command);
-				
-				while (p.isAlive()) {
-					BufferedReader reader = 
-							new BufferedReader(
-									new InputStreamReader(p.getInputStream()));
-					String line = "";
+				if (filenamewithExt.startsWith("AndroidManifest.xml")) {
+					xmlfile = apkfile.substring(1, apkfile.length()-1);
 					
-					while ((line = reader.readLine())!= null) 
-					{
-						if(line.equals("") == false)
-						{
-							if (DEBUG) System.out.println(line);
-						}
-					}
-	
+					find(xmlfile);
 				}
-				
-				find(xmlfile);
+				else {
+					xmlfile = outputDir + "/AndroidManifest.xml";
+					
+					if (DEBUG) System.out.println("XML: " + xmlfile);
+					
+					
+					Process p = Runtime.getRuntime().exec(command);
+					
+					while (p.isAlive()) {
+						BufferedReader reader = 
+								new BufferedReader(
+										new InputStreamReader(p.getInputStream()));
+						String line = "";
+						
+						while ((line = reader.readLine())!= null) 
+						{
+							if(line.equals("") == false)
+							{
+								if (DEBUG) System.out.println(line);
+							}
+						}
 		
-				clearFolders(new File(outputDir));
-	
+					}
+					
+					find(xmlfile);
+			
+					clearFolders(new File(outputDir));
+				}
 				
 			} catch (IOException e) {
 				e.printStackTrace();
