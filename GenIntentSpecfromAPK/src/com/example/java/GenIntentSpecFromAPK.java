@@ -187,7 +187,22 @@ public class GenIntentSpecFromAPK {
 	 *  출력 : 인텐트 스펙
 	 */
 	private final static boolean DEBUG = false;
-	private final static String apktool = "apktool_win.bat";
+	
+	private static String apktool;
+	
+	static {
+		String osName = System.getProperty("os.name");
+		String osNameMatch = osName.toLowerCase();
+		if(osNameMatch.contains("linux")) {
+			apktool = "apktool_linux";
+		} else if(osNameMatch.contains("windows")) {
+			apktool = "apktool_win.bat";
+		} else if(osNameMatch.contains("mac os") || osNameMatch.contains("macos") || osNameMatch.contains("darwin")) {
+			apktool = "apktool_mac";
+		}else {
+			apktool = "apktool_win.bat"; // Windows OS by default
+		}
+	}
 
 	public static void main(String[] args) {
 
