@@ -114,7 +114,7 @@ public class BenchAdd extends JFrame {
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		scrollPane.setBounds(12, 360, 1219, 302);
+		scrollPane.setBounds(12, 417, 1219, 245);
 		contentPane.add(scrollPane);
 		
 		txtAdbCommand = new JTextArea();
@@ -177,11 +177,11 @@ public class BenchAdd extends JFrame {
 				ExecuteShellCommand.executeMakeAdbCommand(BenchAdd.this, command);
 			}
 		});
-		btnMake.setBounds(487, 31, 220, 30);
+		btnMake.setBounds(487, 31, 181, 30);
 		contentPane.add(btnMake);
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
-		scrollPane_1.setBounds(12, 98, 1219, 227);
+		scrollPane_1.setBounds(12, 107, 1219, 264);
 		scrollPane_1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane_1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		contentPane.add(scrollPane_1);
@@ -214,7 +214,7 @@ public class BenchAdd extends JFrame {
 		contentPane.add(lblCount);
 		
 		JLabel lblIntentspec = new JLabel("Intent Specification :");
-		lblIntentspec.setBounds(12, 71, 134, 20);
+		lblIntentspec.setBounds(12, 77, 134, 20);
 		contentPane.add(lblIntentspec);
 		
 		chkExtraValueReplace = new JCheckBox("ExtraValueReplace");
@@ -223,13 +223,13 @@ public class BenchAdd extends JFrame {
 		contentPane.add(chkExtraValueReplace);
 		
 		JLabel lblAdbCommands = new JLabel("ADB Commands : ");
-		lblAdbCommands.setBounds(12, 335, 106, 15);
+		lblAdbCommands.setBounds(12, 388, 106, 15);
 		contentPane.add(lblAdbCommands);
 		
-		fc.addChoosableFileFilter(new APKFilter());
+		fc.addChoosableFileFilter(new APKOrAndroidManifestFilter());
 		fc.setAcceptAllFileFilterUsed(false);
 		
-		btnImportFromApk = new JButton(labelBtnImport);
+		btnImportFromApk = new JButton("Import");
 		btnImportFromApk.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
@@ -270,7 +270,7 @@ public class BenchAdd extends JFrame {
 				ExecuteShellCommand.executeImportIntentSpecCommand(BenchAdd.this, command);
 			}
 		});
-		btnImportFromApk.setBounds(955, 58, 259, 30);
+		btnImportFromApk.setBounds(141, 71, 99, 30);
 		contentPane.add(btnImportFromApk);
 		
 		JButton btnClear = new JButton("Clear");
@@ -279,7 +279,7 @@ public class BenchAdd extends JFrame {
 				txtIntentSpec.setText("");
 			}
 		});
-		btnClear.setBounds(140, 71, 97, 23);
+		btnClear.setBounds(252, 71, 97, 30);
 		contentPane.add(btnClear);
 		
 		JButton btnClear_1 = new JButton("Clear");
@@ -288,7 +288,7 @@ public class BenchAdd extends JFrame {
 				txtAdbCommand.setText("");
 			}
 		});
-		btnClear_1.setBounds(130, 335, 97, 23);
+		btnClear_1.setBounds(130, 381, 97, 30);
 		contentPane.add(btnClear_1);
 		
 		
@@ -559,7 +559,7 @@ public class BenchAdd extends JFrame {
         logger.addHandler(fileHandler);
     }
     
-    private class APKFilter extends FileFilter {
+    private class APKOrAndroidManifestFilter extends FileFilter {
     	 
         //Accept all directories and all apk files.
         public boolean accept(File f) {
@@ -568,16 +568,17 @@ public class BenchAdd extends JFrame {
             }
      
             String extension = getExtension(f);
-            if (extension != null) {
-            	return extension.equals(apk);
+            if (extension != null && extension.equals(apk)) {
+            	return true;
             }
-     
-            return false;
+            else {
+            	return "AndroidManifest.xml".equals(f.getName());
+            }
         }
      
         //The description of this filter
         public String getDescription() {
-            return "Just APKs";
+            return "APK or AndroidManifest.xml";
         }
         
         public final static String apk = "apk";
