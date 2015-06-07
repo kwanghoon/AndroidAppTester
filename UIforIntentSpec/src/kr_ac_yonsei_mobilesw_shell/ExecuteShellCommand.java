@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 
 import kr_ac_yonsei_mobilesw_UI.BenchAdd;
 import kr_ac_yonsei_mobilesw_UI.Benchmark;
+import kr_ac_yonsei_mobilesw_UI.InterfaceWithExecution;
 
 public class ExecuteShellCommand {
 	public static void executeCommand(Benchmark ui, String command) 
@@ -126,7 +127,7 @@ public class ExecuteShellCommand {
 		worker.start();
 	}
 		
-	public static void executeMakeAdbCommand(BenchAdd ui, String command) 
+	public static void executeMakeTestArtifacts(InterfaceWithExecution ui, String command) 
 	{		
 		Thread worker = new Thread()
 		{
@@ -147,7 +148,8 @@ public class ExecuteShellCommand {
 						{
 							if(line.equals("") == false)
 							{
-								ui.appendTxt_adbCommand(line + "\n");
+								//ui.appendTxt_adbCommand(line + "\n");
+								ui.appendTxt_testArtifacts(line + "\n");
 							}
 						}
 					}
@@ -164,7 +166,7 @@ public class ExecuteShellCommand {
 		worker.start();
 	}
 	
-	public static void executeImportIntentSpecCommand(BenchAdd ui, String command) 
+	public static void executeImportIntentSpecCommand(InterfaceWithExecution ui, String command) 
 	{		
 		Thread worker = new Thread()
 		{

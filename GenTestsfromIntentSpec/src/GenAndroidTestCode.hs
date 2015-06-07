@@ -60,17 +60,17 @@ public class ${TEST_CLASS_NAME} extends ActivityUnitTestCase<${CLASS_NAME}> {
 genActivityTestCode :: IntentSpec -> [String] -> IO ()
 genActivityTestCode is args = do
     compUnit <- genActivityTestCode' pkg_name test_class_name class_name is
-    writeFile outputPath (prettyPrint compUnit)
-    -- putStrLn $ prettyPrint $ compUnit
+    -- writeFile outputPath (prettyPrint compUnit)
+    putStrLn $ prettyPrint $ compUnit
     -- mapM_ (putStrLn . show) is
     where pkg_name   = args !! 0
           class_name = args !! 1
           suffix     = args !! 2
-          output     = args !! 3
+          -- output     = args !! 3
           
           _suffix    = if suffix == "" then suffix else "_" ++ suffix
           test_class_name = class_name ++ "Test" ++ _suffix
-          outputPath = output ++ test_class_name ++ ".java"  
+          -- outputPath = output ++ test_class_name ++ ".java"  
           
           
 genActivityTestCode' pkg_name test_class_name class_name is = do
@@ -242,17 +242,17 @@ public class ${TEST_CLASS_NAME} extends ServiceTestCase<${CLASS_NAME}> {
 genServiceTestCode :: IntentSpec -> [String] -> IO ()
 genServiceTestCode is args = do
     compUnit <- genServiceTestCode' pkg_name test_class_name class_name is
-    writeFile outputPath (prettyPrint compUnit)
-    -- putStrLn $ prettyPrint $ compUnit
+    -- writeFile outputPath (prettyPrint compUnit)
+    putStrLn $ prettyPrint $ compUnit
     -- mapM_ (putStrLn . show) is
     where pkg_name   = args !! 0
           class_name = args !! 1
           suffix     = args !! 2
-          output     = args !! 3
+          -- output     = args !! 3
           
           _suffix    = if suffix == "" then suffix else "_" ++ suffix
           test_class_name = class_name ++ "Test" ++ _suffix
-          outputPath = output ++ test_class_name ++ ".java"
+          -- outputPath = output ++ test_class_name ++ ".java"
 
 genServiceTestCode' pkg_name test_class_name class_name is = do
     return compUnit

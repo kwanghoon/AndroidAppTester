@@ -39,8 +39,10 @@ import javax.swing.JCheckBox;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
-public class BenchAdd extends JFrame implements InterfaceWithExecution {
+public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecution {
 
 	private JPanel contentPane;
 	private static Benchmark benchmarkUI;
@@ -59,10 +61,23 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 	
 	private JFileChooser fc = new JFileChooser();
 	
+	private JFileChooser fcOutput = new JFileChooser();
+	
 	private static final Logger logger = Logger.getLogger(Benchmark.class.getName());
 	private FileHandler fileHandler;
 
 	private static String genCommand;
+	private JTextField textOutputDir;
+	private JTextField textPackage;
+	private JTextField textClass;
+	private JTextField textTestNo;
+	
+	private JLabel lblTestCodeFileName;
+	
+	private String pkgName;
+	private String clzName;
+	private String testNo;
+	private String testFileName;
 	
 	static {
 		String osName = System.getProperty("os.name");
@@ -85,7 +100,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					BenchAdd frame = new BenchAdd(benchmarkUI);
+					GenAndroidTestCodeUI frame = new GenAndroidTestCodeUI(benchmarkUI);
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -97,10 +112,10 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 	/**
 	 * Create the frame.
 	 */
-	public BenchAdd(Benchmark mUI) {
+	public GenAndroidTestCodeUI(Benchmark mUI) {
 		addFileHandler(logger);
 		
-		setTitle("Add - AdbCommand");
+		setTitle("Generating Android Test Code");
 		
 		this.benchmarkUI = mUI;
 		
@@ -114,14 +129,14 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		scrollPane.setBounds(12, 417, 1219, 245);
+		scrollPane.setBounds(12, 449, 1219, 221);
 		contentPane.add(scrollPane);
 		
 		txtAdbCommand = new JTextArea();
 		txtAdbCommand.setFont(new Font("Courier New", Font.PLAIN, 12));
 		scrollPane.setViewportView(txtAdbCommand);
 		
-		JButton btnOk = new JButton("OK");
+		JButton btnOk = new JButton("SAVE");
 		btnOk.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
@@ -146,13 +161,26 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		cboComponent.setBounds(158, 31, 129, 30);
 		contentPane.add(cboComponent);
 		
-		JButton btnMake = new JButton("Generate ADB Commands");
+		JButton btnMake = new JButton("Generate Android Test Code");
+		btnMake.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+			}
+		});
 		btnMake.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
 				
+				String pkg = textPackage.getText();
+				String clz = textClass.getText();
+				String testno = textTestNo.getText();
+				
+				if (pkg==null || pkg.equals("") 
+						|| clz==null || clz.equals("") 
+						|| testno==null || testno.equals(""))
+					return;
+				
 				String command = System.getProperty("user.dir") 
-						+ "/../GenTestsfromIntentSpec/bin/" + genCommand + " AdbCommand "; 
+						+ "/../GenTestsfromIntentSpec/bin/" + genCommand + " AndroidTestCode "; 
 				
 				
 				String intentSepc = txtIntentSpec.getText();
@@ -170,18 +198,21 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 				command = command + cboMakeMode.getSelectedIndex() + " " +
 								    cboComponent.getSelectedIndex() + " " +
 								    txtCount.getText() + " " +
-								    intentSepc + " ";
+								    intentSepc + " " +
+								    pkg + " " +
+									clz + " " +
+									testno;
 				
 				System.out.println("RUN: " + command);
 				
-				ExecuteShellCommand.executeMakeTestArtifacts(BenchAdd.this, command);
+				ExecuteShellCommand.executeMakeTestArtifacts(GenAndroidTestCodeUI.this, command);
 			}
 		});
-		btnMake.setBounds(487, 31, 181, 30);
+		btnMake.setBounds(487, 31, 209, 30);
 		contentPane.add(btnMake);
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
-		scrollPane_1.setBounds(12, 107, 1219, 264);
+		scrollPane_1.setBounds(12, 162, 1219, 209);
 		scrollPane_1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane_1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		contentPane.add(scrollPane_1);
@@ -214,17 +245,13 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		contentPane.add(lblCount);
 		
 		JLabel lblIntentspec = new JLabel("Intent Specification :");
-		lblIntentspec.setBounds(12, 77, 134, 20);
+		lblIntentspec.setBounds(12, 132, 134, 20);
 		contentPane.add(lblIntentspec);
 		
 		chkExtraValueReplace = new JCheckBox("ExtraValueReplace");
 		chkExtraValueReplace.setSelected(true);
 		chkExtraValueReplace.setBounds(879, 676, 134, 23);
 		contentPane.add(chkExtraValueReplace);
-		
-		JLabel lblAdbCommands = new JLabel("ADB Commands : ");
-		lblAdbCommands.setBounds(12, 388, 106, 15);
-		contentPane.add(lblAdbCommands);
 		
 		fc.addChoosableFileFilter(new APKOrAndroidManifestFilter());
 		fc.setAcceptAllFileFilterUsed(false);
@@ -237,7 +264,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 				// fc.addChoosableFileFilter(new APKFilter());
 				// fc.setAcceptAllFileFilterUsed(false);
 
-				int returnVal = fc.showOpenDialog(BenchAdd.this);
+				int returnVal = fc.showOpenDialog(GenAndroidTestCodeUI.this);
 				
 				File file;
 				
@@ -267,10 +294,10 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 				System.out.println("RUN: " + command);
 				
 				btnImportFromApk.setText(labelBtnImporting);
-				ExecuteShellCommand.executeImportIntentSpecCommand(BenchAdd.this, command);
+				ExecuteShellCommand.executeImportIntentSpecCommand(GenAndroidTestCodeUI.this, command);
 			}
 		});
-		btnImportFromApk.setBounds(141, 71, 99, 30);
+		btnImportFromApk.setBounds(149, 127, 99, 30);
 		contentPane.add(btnImportFromApk);
 		
 		JButton btnClear = new JButton("Clear");
@@ -279,19 +306,127 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 				txtIntentSpec.setText("");
 			}
 		});
-		btnClear.setBounds(252, 71, 97, 30);
+		btnClear.setBounds(253, 127, 97, 30);
 		contentPane.add(btnClear);
 		
-		JButton btnClear_1 = new JButton("Clear");
-		btnClear_1.addActionListener(new ActionListener() {
+		textOutputDir = new JTextField();
+		textOutputDir.setBounds(12, 410, 1219, 30);
+		contentPane.add(textOutputDir);
+		textOutputDir.setColumns(10);
+		
+		fcOutput.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		fcOutput.setAcceptAllFileFilterUsed(false);
+		
+		JButton btnOutputDirectory = new JButton("Output Directory :");
+		btnOutputDirectory.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int returnVal = fcOutput.showOpenDialog(GenAndroidTestCodeUI.this);
+				
+				File file;
+				
+		        if (returnVal != JFileChooser.APPROVE_OPTION) {
+		        	return;
+		        }
+		        
+		        file = fcOutput.getSelectedFile();
+			
+		        textOutputDir.setText(file.getAbsolutePath());
+			}
+		});
+		btnOutputDirectory.setBounds(12, 381, 134, 26);
+		contentPane.add(btnOutputDirectory);
+		
+		lblTestCodeFileName = new JLabel("*.java");
+		lblTestCodeFileName.setBounds(158, 387, 890, 15);
+		contentPane.add(lblTestCodeFileName);
+
+		
+		JLabel lblPackage = new JLabel("Package :");
+		lblPackage.setBounds(12, 71, 57, 15);
+		contentPane.add(lblPackage);
+		
+		pkgName = "";
+		
+		JLabel lblClass = new JLabel("Class :");
+		lblClass.setBounds(378, 71, 57, 15);
+		contentPane.add(lblClass);
+		
+		clzName = "";
+		
+		JLabel lblTestNo = new JLabel("Test No. :");
+		lblTestNo.setBounds(600, 71, 57, 15);
+		contentPane.add(lblTestNo);
+		
+		testNo = "";
+		
+		textPackage = new JTextField();
+		textPackage.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyTyped(KeyEvent arg0) {
+				char ch = arg0.getKeyChar();
+				String ch_s = ch == '\b' ? "" : ch + "" ; 
+				setTestFileName(textPackage.getText() + ch_s
+						, textClass.getText()
+						, textTestNo.getText());
+			}
+		});
+		textPackage.setBounds(12, 92, 362, 30);
+		contentPane.add(textPackage);
+		textPackage.setColumns(10);
+		
+		textClass = new JTextField();
+		textClass.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyTyped(KeyEvent arg0) {
+				char ch = arg0.getKeyChar();
+				String ch_s = ch == '\b' ? "" : ch + "" ; 
+				setTestFileName(textPackage.getText()
+						, textClass.getText() + ch_s
+						, textTestNo.getText());
+			}
+		});
+		textClass.setBounds(378, 91, 219, 31);
+		contentPane.add(textClass);
+		textClass.setColumns(10);
+		
+		textTestNo = new JTextField();
+		textTestNo.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyTyped(KeyEvent arg0) {
+				char ch = arg0.getKeyChar();
+				String ch_s = ch == '\b' ? "" : ch + "" ; 
+				setTestFileName(textPackage.getText()
+						, textClass.getText()
+						, textTestNo.getText()  + ch_s);
+			}
+		});
+		textTestNo.setBounds(600, 91, 96, 31);
+		contentPane.add(textTestNo);
+		textTestNo.setColumns(10);
+		
+		JButton btnClearAndroidTestCode = new JButton("Clear");
+		btnClearAndroidTestCode.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				txtAdbCommand.setText("");
 			}
 		});
-		btnClear_1.setBounds(130, 381, 97, 30);
-		contentPane.add(btnClear_1);
+		btnClearAndroidTestCode.setBounds(1132, 381, 97, 23);
+		contentPane.add(btnClearAndroidTestCode);
+		
+		testFileName = "";
 		
 		
+		setTestFileName(textPackage.getText()
+				, textClass.getText()
+				, textTestNo.getText());
+	}
+	
+	public void setTestFileName(String pkg, String clz, String testno) {
+		String _pkg = pkg==null || pkg.equals("") ? "${PACKAGE NAME}" : pkg;
+		String _clz = clz==null || clz.equals("") ? "${CLASS NAME}" : clz;
+		String _testno = testno==null || testno.equals("") ? "${TEST NUMBER}" : testno;
+		
+		lblTestCodeFileName.setText(_pkg + "/" + _clz + "Test_" + _testno + ".java");
 	}
 	
 	public void appendTxt_testArtifacts(String str)
@@ -301,7 +436,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 	}
 	
 	public void done_testArtifacts() {
-	}
+	}	
 	
 	public void appendTxt_intentSpec(String str)
 	{
@@ -600,4 +735,5 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
             return ext;
         }
     }
+    
 }
