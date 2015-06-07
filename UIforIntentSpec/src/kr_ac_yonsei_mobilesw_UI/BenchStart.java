@@ -175,32 +175,32 @@ public class BenchStart {
 							+ IntentSpecCatchAndNormal +  IntentSpecCatchAndExit + IntentSpecCatchAndErrorExit
 							+ IntentSpecPassAndNormal + IntentSpecPassAndExit + IntentSpecPassAndErrorExit + CantAnalyze;
 					
-					ui.txtBenchResult.setText("정상실행\t\t: " + Normal
-							+ "\n정상종료\t\t: " + Exit 
-							+ "\n비정상종료\t\t: " + ErrorExit
-							+ "\n인텐트 스펙 검출 후 정상실행\t: " + IntentSpecCatchAndNormal
-							+ "\n인텐트 스펙 검출 후 정상종료\t: " + IntentSpecCatchAndExit
-							+ "\n인텐트 스펙 검출 후 비정상종료\t: " + IntentSpecCatchAndErrorExit
-							+ "\n인텐트 스펙 통과 후 정상실행\t: " + IntentSpecPassAndNormal 
-							+ "\n인텐트 스펙 통과 후 정상종료\t: " + IntentSpecPassAndExit 
-							+ "\n인텐트 스펙 통과 후 비정상종료\t: " + IntentSpecPassAndErrorExit  
-							+ "\n분석 실패\t\t: " + CantAnalyze
-							+ "\n진행률\t: " + (int)(((double)resultCount / ui.modelAdbCommand.getRowCount()) * 100) + "% (" + (resultCount + "/" + ui.modelAdbCommand.getRowCount() + ")"));
+					ui.txtBenchResult.setText("Normal Execution\t\t: " + Normal
+							+ "\nNormal Termination\t\t: " + Exit 
+							+ "\nAbnormal Termination\t\t: " + ErrorExit
+							+ "\n(Assertion False) Normal Execution\t: " + IntentSpecCatchAndNormal
+							+ "\n(Assertion False) Normal Termination\t: " + IntentSpecCatchAndExit
+							+ "\n(Assertion False) Abnormal Termination\t: " + IntentSpecCatchAndErrorExit
+							+ "\n(Assertion True) Normal Execution\t: " + IntentSpecPassAndNormal 
+							+ "\n(Assertion True) Normal Termination\t: " + IntentSpecPassAndExit 
+							+ "\n(Assertion True) Abnormal Termination\t: " + IntentSpecPassAndErrorExit  
+							+ "\nAnalysis Failure\t\t: " + CantAnalyze
+							+ "\nProgress\t: " + (int)(((double)resultCount / ui.modelAdbCommand.getRowCount()) * 100) + "% (" + (resultCount + "/" + ui.modelAdbCommand.getRowCount() + ")"));
 					
 					addRowinExcel("result : " + result.toString());
 					addRowinExcel("------------------------------------------------------------");
 				}
 				
-				String resultAll = "정상실행\t\t: " + Normal
-						+ "\n정상종료\t\t: " + Exit 
-						+ "\n비정상종료\t\t: " + ErrorExit
-						+ "\n인텐트 스펙 검출 후 정상실행\t: " + IntentSpecCatchAndNormal
-						+ "\n인텐트 스펙 검출 후 정상종료\t: " + IntentSpecCatchAndExit
-						+ "\n인텐트 스펙 검출 후 비정상종료\t: " + IntentSpecCatchAndErrorExit
-						+ "\n인텐트 스펙 통과 후 정상실행\t: " + IntentSpecPassAndNormal 
-						+ "\n인텐트 스펙 통과 후 정상종료\t: " + IntentSpecPassAndExit 
-						+ "\n인텐트 스펙 통과 후 비정상종료\t: " + IntentSpecPassAndErrorExit  
-						+ "\n분석 실패\t\t: " + CantAnalyze
+				String resultAll = "Normal Execution\t\t: " + Normal
+						+ "\nNormal Termination\t\t: " + Exit 
+						+ "\nAbnormal Termination\t\t: " + ErrorExit
+						+ "\n(Assertion False) Normal Execution\t: " + IntentSpecCatchAndNormal
+						+ "\n(Assertion False) Normal Termination\t: " + IntentSpecCatchAndExit
+						+ "\n(Assertion False) Abnormal Termination\t: " + IntentSpecCatchAndErrorExit
+						+ "\n(Assertion True) Normal Execution\t: " + IntentSpecPassAndNormal 
+						+ "\n(Assertion True) Normal Termination\t: " + IntentSpecPassAndExit 
+						+ "\n(Assertion True) Abnormal Termination\t: " + IntentSpecPassAndErrorExit  
+						+ "\nAnalysis Failure\t\t: " + CantAnalyze
 						+ "\nResult Count\t\t: " + (Normal + Exit + ErrorExit 
 								+ IntentSpecCatchAndNormal + IntentSpecCatchAndExit + IntentSpecCatchAndErrorExit 
 								+ IntentSpecPassAndNormal + IntentSpecPassAndExit + IntentSpecPassAndErrorExit + CantAnalyze);

@@ -9,6 +9,7 @@ import java.awt.Rectangle;
 
 import javax.swing.DebugGraphics;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -42,6 +43,7 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.JLabel;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -53,6 +55,9 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
 import javax.swing.JSplitPane;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class Benchmark extends JFrame {
 
@@ -90,7 +95,25 @@ public class Benchmark extends JFrame {
 	JTextArea txtBenchResult;
 	private JButton btnExecwithfilter;
 	
+	private JFileChooser fc = new JFileChooser();
+	
 	HashMap<String, String> mapPidToApplicationName = new HashMap<String, String>();
+	
+	private static String adbPathString; 
+	
+	static {
+		String osName = System.getProperty("os.name");
+		String osNameMatch = osName.toLowerCase();
+		if(osNameMatch.contains("linux")) {
+			adbPathString = "/home/";
+		} else if(osNameMatch.contains("windows")) {
+			adbPathString = "C:/users/";
+		} else if(osNameMatch.contains("mac os") || osNameMatch.contains("macos") || osNameMatch.contains("darwin")) {
+			adbPathString = "/Users/";
+		} else {
+			adbPathString = "C:/users/"; // Windows OS by default
+		}
+	}
 
 	/**
 	 * Launch the application.
@@ -122,7 +145,7 @@ public class Benchmark extends JFrame {
 	public Benchmark() {
 		addFileHandler(logger);
 		
-		setTitle("IntentSpecBenchmark v1.0");
+		setTitle("Generating ADB Commands");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1259, 750);
 		contentPane = new JPanel();
@@ -151,7 +174,7 @@ public class Benchmark extends JFrame {
 				
 				if(txtAdbPath.getText().trim().equals(""))
 				{
-					command = "D:/adt-bundle-windows-x86_64-20140702/sdk/platform-tools/" + command;
+					command = adbPathString + command;
 				}
 				else
 				{
@@ -371,8 +394,8 @@ public class Benchmark extends JFrame {
 				txtAdbPath.setText(txtAdbPath.getText().replaceAll("\\\\", "/"));
 			}
 		});
-		txtAdbPath.setText("D:/adt-bundle-windows-x86_64-20140702/sdk/platform-tools/");
-		txtAdbPath.setBounds(12, 28, 214, 28);
+		txtAdbPath.setText(adbPathString);
+		txtAdbPath.setBounds(12, 35, 214, 28);
 		contentPane.add(txtAdbPath);
 		txtAdbPath.setColumns(10);
 		
@@ -407,7 +430,7 @@ public class Benchmark extends JFrame {
 
 				if(txtAdbPath.getText().trim().equals(""))
 				{
-					command = "D:/adt-bundle-windows-x86_64-20140702/sdk/platform-tools/" + command;
+					command = adbPathString + command;
 				}
 				else
 				{
@@ -541,6 +564,30 @@ public class Benchmark extends JFrame {
 		});
 		btnExecwithfilter.setBounds(1152, 144, 79, 30);
 		contentPane.add(btnExecwithfilter);
+		
+		// fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		// fc.setAcceptAllFileFilterUsed(false);
+		
+		JButton btnFind = new JButton("Find");
+		btnFind.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				int returnVal = fc.showOpenDialog(Benchmark.this);
+				
+				File file;
+				
+		        if (returnVal != JFileChooser.APPROVE_OPTION) {
+		        	return;
+		        }
+		        
+		        file = fc.getSelectedFile();
+			
+		        String fullname = file.getAbsolutePath();
+		        String filename = file.getName();
+		        txtAdbPath.setText(fullname.substring(0, fullname.length()-filename.length()));
+			}
+		});
+		btnFind.setBounds(130, 9, 97, 23);
+		contentPane.add(btnFind);
 	}
 
 	public int getLocationX()
@@ -959,7 +1006,7 @@ public class Benchmark extends JFrame {
 			
 			if(txtAdbPath.getText().trim().equals(""))
 			{
-				command = "D:/adt-bundle-windows-x86_64-20140702/sdk/platform-tools/" + command;
+				command = adbPathString + command;
 			}
 			else
 			{
