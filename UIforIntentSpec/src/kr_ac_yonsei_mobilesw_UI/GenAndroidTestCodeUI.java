@@ -18,7 +18,9 @@ import javax.swing.ScrollPaneConstants;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
@@ -27,6 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JSplitPane;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
@@ -137,12 +140,58 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 		scrollPane.setViewportView(txtAdbCommand);
 		
 		JButton btnOk = new JButton("SAVE");
-		btnOk.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent arg0) {
-				AddAdbCommand();
+		btnOk.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String pkg = textPackage.getText();
+				String clz = textClass.getText();
+				String testno = textTestNo.getText();
+				
+				if (pkg==null || pkg.equals("") 
+						|| clz==null || clz.equals("") 
+						|| testno==null || testno.equals(""))
+					return;
+				
+				String outdir = textOutputDir.getText() + "/";
+				String pkgdir = pkg.replaceAll("\\.", "/") + "/";
+				String dirtosave = outdir + pkgdir;
+				
+				File f_dirtosave = new File(dirtosave);
+				if (f_dirtosave.exists() == false) {
+					f_dirtosave.mkdirs();
+				}
+				else {
+					File f_filetosave = new File(outdir + getTestFileName(pkg, clz,testno));
+					if (f_filetosave.exists()) {
+						Object[] options = {"Yes", "No" };
+						int n = JOptionPane.showOptionDialog(GenAndroidTestCodeUI.this,
+						    "Are you sure to overwrite the existing file?",
+						    "Question",
+						    JOptionPane.YES_NO_CANCEL_OPTION,
+						    JOptionPane.QUESTION_MESSAGE,
+						    null,
+						    options,
+						    options[1]);
+						
+						if( n==1 ) return;
+					}
+					
+					
+				}
+				
+				File f_filetosave = new File(outdir + getTestFileName(pkg, clz,testno));
+				BufferedWriter bw = null;
+				try {
+					bw = new BufferedWriter(new FileWriter(f_filetosave));
+					bw.write(txtAdbCommand.getText());
+					bw.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				} 
+				
+				
 			}
 		});
+		
 		btnOk.setBounds(1021, 672, 99, 30);
 		contentPane.add(btnOk);
 		
@@ -421,12 +470,15 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 				, textTestNo.getText());
 	}
 	
-	public void setTestFileName(String pkg, String clz, String testno) {
-		String _pkg = pkg==null || pkg.equals("") ? "${PACKAGE NAME}" : pkg;
+	public void setTestFileName(String pkg, String clz, String testno) {		
+		lblTestCodeFileName.setText(getTestFileName(pkg, clz, testno));
+	}
+	
+	public String getTestFileName(String pkg, String clz, String testno) {
+		String _pkg = pkg==null || pkg.equals("") ? "${PACKAGE NAME}" : pkg.replaceAll("\\.", "/");
 		String _clz = clz==null || clz.equals("") ? "${CLASS NAME}" : clz;
 		String _testno = testno==null || testno.equals("") ? "${TEST NUMBER}" : testno;
-		
-		lblTestCodeFileName.setText(_pkg + "/" + _clz + "Test_" + _testno + ".java");
+		return _pkg + "/" + _clz + "Test_" + _testno + ".java";
 	}
 	
 	public void appendTxt_testArtifacts(String str)
