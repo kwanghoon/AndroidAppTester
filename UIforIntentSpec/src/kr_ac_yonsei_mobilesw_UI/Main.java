@@ -217,9 +217,9 @@ public class Main extends JFrame implements InterfaceWithExecution {
 		        
 		        Config.putImportPath(fc.getCurrentDirectory().getAbsolutePath());
 				
-				String command = "java -cp " 
+				String command = "java -cp \"" 
 									+ System.getProperty("user.dir") + "/bin;" 
-									+ System.getProperty("user.dir") + "/lib/* " 
+									+ System.getProperty("user.dir") + "/lib/*\" " 
 									+ "com.example.java.GenIntentSpecFromAPK " 
 									+ "\"" + file.getAbsolutePath() + "\""; // ' ' in the file name
 				
@@ -233,7 +233,7 @@ public class Main extends JFrame implements InterfaceWithExecution {
 				//		} );
 			}
 		});
-		btnImportFromApk.setBounds(653, 5, 79, 30);
+		btnImportFromApk.setBounds(622, 5, 110, 30);
 		contentPane.add(btnImportFromApk);
 		
 		JButton btnClear = new JButton("Clear");

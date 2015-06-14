@@ -296,9 +296,9 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 		        
 		        Config.putImportPath(fc.getCurrentDirectory().getAbsolutePath());
 				
-				String command = "java -cp " 
+				String command = "java -cp \"" 
 									+ System.getProperty("user.dir") + "/bin;" 
-									+ System.getProperty("user.dir") + "/lib/* " 
+									+ System.getProperty("user.dir") + "/lib/*\" " 
 									+ "com.example.java.GenIntentSpecFromAPK " 
 									+ "\"" + file.getAbsolutePath() + "\""; // ' ' in the file name
 				

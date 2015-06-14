@@ -102,7 +102,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 	public BenchAdd(Benchmark mUI, String[] args) {
 		addFileHandler(logger);
 		
-		setTitle("Generating AdbCommands");
+		setTitle("Adb Command Generation");
 		
 		this.benchmarkUI = mUI;
 		
