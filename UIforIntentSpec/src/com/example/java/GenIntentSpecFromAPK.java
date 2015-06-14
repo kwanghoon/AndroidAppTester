@@ -72,9 +72,9 @@ public class GenIntentSpecFromAPK {
 						cmp = parser.getAttributeValue(null, "android:name");
 						if (cmp.substring(0, 1).equals(".")) { // android:name =.MyActivity
 							cmp = manifest + "/" + cmp;
-						} else if (cmp.startsWith(manifest)) { // android:name =com.example.java.MyActity �뙣�궎吏�紐� �씪
+						} else if (cmp.startsWith(manifest)) { // android:name =com.example.java.MyActitvity 
 							cmp = manifest + "/" + cmp;
-						} else if (cmp.contains(".")) { 		// android:name =com.example.java.MyActivity�뙣�궎吏�紐낅떎
+						} else if (cmp.contains(".")) { 		// android:name =com.example.java.MyActivity
 							cmp = manifest + "/" + cmp;
 						} else { 								// android:name = MyActivity
 							cmp = manifest + "/" + "." + cmp;
@@ -102,7 +102,7 @@ public class GenIntentSpecFromAPK {
 						for (int i = 0; i < action_count; i++) { 
 							String t_category = "";
 							for (int m = 0; m < category_count; m++) { 
-								if (m > 0) {    //�떆�옉�븷�븣�뿉�뒗 , 瑜� �븞李띻린 �쐞�빐�꽌 
+								if (m > 0) {    // when multiple categories exist 
 									t_category += ", ";
 								}
 								t_category += category.get(m);
@@ -184,12 +184,9 @@ public class GenIntentSpecFromAPK {
 	}
 
 	/*
-	 *  입력 : 옵션, APK 파일의 경로
-	 *      옵션 -activity  Activity 컴포넌트를 위한 인텐트 스펙
-	 *          -service  Service 컴포넌트를 위한 인텐트 스펙
-	 *          -receiver  Broadcast Receiver 컴포넌트를 위한 인텐트 스펙
-	 *          -all 3가지 타입의 컴포넌트를 위한 인텐트 스펙
-	 *  출력 : 인텐트 스펙
+	 *  INPUT: A path to an APK file
+	 *      
+	 *  OUTPUT: Intent Specification
 	 */
 	private final static boolean DEBUG = false;
 	
@@ -214,12 +211,7 @@ public class GenIntentSpecFromAPK {
 		requestType = Type.All;
 		String apkfile;
 		
-		if (args.length == 1) {
-//			if ( "-all".equalsIgnoreCase(args[0]) ) requestType = Type.All;
-//			else if ( "-activity".equalsIgnoreCase(args[0]) ) requestType = Type.Activity;
-//			else if ( "-service".equalsIgnoreCase(args[0]) ) requestType = Type.Service;
-//			else if ( "-receiver".equalsIgnoreCase(args[0]) ) requestType = Type.BroadcastReceiver;
-		
+		if (args.length == 1) {		
 		
 			apkfile = "\"" + args[0] + "\"";	// ' ' in the file name
 			
