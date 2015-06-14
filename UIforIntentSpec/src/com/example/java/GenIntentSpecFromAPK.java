@@ -36,7 +36,7 @@ public class GenIntentSpecFromAPK {
 			XmlPullParserFactory parserFactory = XmlPullParserFactory.newInstance();
 			XmlPullParser parser = parserFactory.newPullParser();
 			parser.setInput(url, "utf-8");
-			String name = null, manifest = null, typ = null, cmp = null;
+			String name = null, manifest = null, typ = null, cmp = null, cmptype = null;
 
 			ArrayList<String> action = new ArrayList<String>();
 			ArrayList<String> category = new ArrayList<String>();
@@ -60,10 +60,13 @@ public class GenIntentSpecFromAPK {
 					if ("activity".equals(name) || "receiver".equals(name) || "service".equals(name)) {
 						if ("activity".equals(name)) {
 							context = 1;
+							cmptype = "Activity ";
 						} else if ("receiver".equals(name)) {
 							context = 3;
+							cmptype = "BroadcastReceiver ";
 						} else {
 							context = 2;
+							cmptype = "Service ";
 						}
 
 						cmp = parser.getAttributeValue(null, "android:name");
@@ -76,6 +79,8 @@ public class GenIntentSpecFromAPK {
 						} else { 								// android:name = MyActivity
 							cmp = manifest + "/" + "." + cmp;
 						}
+						
+						cmp = cmptype + cmp;
 					}
 
 					if ("action".equals(name)) {
@@ -209,14 +214,14 @@ public class GenIntentSpecFromAPK {
 		requestType = Type.All;
 		String apkfile;
 		
-		if (args.length == 2) {
-			if ( "-all".equalsIgnoreCase(args[0]) ) requestType = Type.All;
-			else if ( "-activity".equalsIgnoreCase(args[0]) ) requestType = Type.Activity;
-			else if ( "-service".equalsIgnoreCase(args[0]) ) requestType = Type.Service;
-			else if ( "-receiver".equalsIgnoreCase(args[0]) ) requestType = Type.BroadcastReceiver;
+		if (args.length == 1) {
+//			if ( "-all".equalsIgnoreCase(args[0]) ) requestType = Type.All;
+//			else if ( "-activity".equalsIgnoreCase(args[0]) ) requestType = Type.Activity;
+//			else if ( "-service".equalsIgnoreCase(args[0]) ) requestType = Type.Service;
+//			else if ( "-receiver".equalsIgnoreCase(args[0]) ) requestType = Type.BroadcastReceiver;
 		
 		
-			apkfile = "\"" + args[1] + "\"";	// ' ' in the file name
+			apkfile = "\"" + args[0] + "\"";	// ' ' in the file name
 			
 			try {
 				String currentWorkingDir = new File("").getAbsolutePath();

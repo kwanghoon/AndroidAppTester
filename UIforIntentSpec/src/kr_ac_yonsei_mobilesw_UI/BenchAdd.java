@@ -18,10 +18,13 @@ import javax.swing.ScrollPaneConstants;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,7 +50,6 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 	private JTextArea txtAdbCommand;
 	private JTextArea txtIntentSpec;
 	private JTextField txtCount;
-	private JComboBox cboComponent;
 	private JComboBox cboMakeMode;
 	private JCheckBox chkExtraValueReplace;
 	
@@ -85,7 +87,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					BenchAdd frame = new BenchAdd(benchmarkUI);
+					BenchAdd frame = new BenchAdd(benchmarkUI, args);
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -97,15 +99,16 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 	/**
 	 * Create the frame.
 	 */
-	public BenchAdd(Benchmark mUI) {
+	public BenchAdd(Benchmark mUI, String[] args) {
 		addFileHandler(logger);
 		
-		setTitle("Add - AdbCommand");
+		setTitle("Generating AdbCommands");
 		
 		this.benchmarkUI = mUI;
 		
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 1259, 750);
+		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//setBounds(100, 100, 1259, 750);
+		setBounds(100, 100, 970, 750);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -114,39 +117,45 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		scrollPane.setBounds(12, 417, 1219, 245);
+		scrollPane.setBounds(12, 417, 926, 245);
 		contentPane.add(scrollPane);
 		
 		txtAdbCommand = new JTextArea();
-		txtAdbCommand.setFont(new Font("Courier New", Font.PLAIN, 12));
+		txtAdbCommand.setFont(new Font("Courier New", Font.PLAIN, 16));
 		scrollPane.setViewportView(txtAdbCommand);
 		
-		JButton btnOk = new JButton("OK");
+		JButton btnOk = new JButton("Run");
+		btnOk.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnOk.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
 				AddAdbCommand();
 			}
 		});
-		btnOk.setBounds(1021, 672, 99, 30);
+		btnOk.setBounds(728, 672, 99, 30);
 		contentPane.add(btnOk);
 		
-		JButton btnCancel = new JButton("Cancel");
+		JButton btnCancel = new JButton("Go back");
+		btnCancel.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnCancel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				Close();
 			}
 		});
-		btnCancel.setBounds(1132, 672, 99, 30);
+		btnCancel.setBounds(839, 672, 99, 30);
 		contentPane.add(btnCancel);
 		
-		cboComponent = new JComboBox();
-		cboComponent.setModel(new DefaultComboBoxModel(new String[] {"Activity", "Broadcast Receiver", "Service"}));
-		cboComponent.setBounds(158, 31, 129, 30);
-		contentPane.add(cboComponent);
+//		try {
+//			if (args.length >= 1) {
+//				int typeofcomponent = Integer.parseInt(args[0]);
+//				cboComponent.setSelectedIndex(typeofcomponent);
+//			}
+//		} catch(NumberFormatException e) {
+//		}
 		
 		JButton btnMake = new JButton("Generate ADB Commands");
+		btnMake.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnMake.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
@@ -168,7 +177,6 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 
 				
 				command = command + cboMakeMode.getSelectedIndex() + " " +
-								    cboComponent.getSelectedIndex() + " " +
 								    txtCount.getText() + " " +
 								    intentSepc + " ";
 				
@@ -177,59 +185,77 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 				ExecuteShellCommand.executeMakeTestArtifacts(BenchAdd.this, command);
 			}
 		});
-		btnMake.setBounds(487, 31, 181, 30);
+		btnMake.setBounds(346, 31, 181, 30);
 		contentPane.add(btnMake);
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
-		scrollPane_1.setBounds(12, 107, 1219, 264);
+		scrollPane_1.setBounds(12, 107, 926, 264);
 		scrollPane_1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane_1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		contentPane.add(scrollPane_1);
 		
 		txtIntentSpec = new JTextArea();
+		txtIntentSpec.setFont(new Font("Monospaced", Font.PLAIN, 16));
 		//txtIntentSpec.setBounds(12, 98, 1219, 97);
 		//contentPane.add(txtIntentSpec);
 		scrollPane_1.setViewportView(txtIntentSpec);
 		
+		if (args.length >= 1) {
+			txtIntentSpec.setText("");
+			
+			Scanner scan = new Scanner(new StringReader(args[0]));
+			
+			while (scan.hasNextLine()) {
+				txtIntentSpec.append(scan.nextLine() + "\n");
+			}
+		}
+		
 		cboMakeMode = new JComboBox();
+		cboMakeMode.setFont(new Font("Arial", Font.PLAIN, 12));
 		cboMakeMode.setModel(new DefaultComboBoxModel(new String[] {"Compatible", "Shape-Compatible", "Random"}));
 		cboMakeMode.setBounds(12, 31, 134, 30);
 		contentPane.add(cboMakeMode);
 		
 		txtCount = new JTextField();
-		txtCount.setBounds(299, 33, 176, 28);
+		txtCount.setBounds(158, 33, 176, 28);
 		contentPane.add(txtCount);
 		txtCount.setColumns(10);
 		
 		JLabel lblMakemode = new JLabel("Mode : ");
+		lblMakemode.setFont(new Font("Arial", Font.PLAIN, 12));
 		lblMakemode.setBounds(12, 10, 75, 20);
 		contentPane.add(lblMakemode);
 		
-		JLabel lblComponent = new JLabel("Component : ");
-		lblComponent.setBounds(159, 10, 89, 20);
-		contentPane.add(lblComponent);
-		
 		JLabel lblCount = new JLabel("Count :");
-		lblCount.setBounds(299, 10, 75, 20);
+		lblCount.setFont(new Font("Arial", Font.PLAIN, 12));
+		lblCount.setBounds(158, 10, 75, 20);
 		contentPane.add(lblCount);
 		
 		JLabel lblIntentspec = new JLabel("Intent Specification :");
+		lblIntentspec.setFont(new Font("Arial", Font.PLAIN, 12));
 		lblIntentspec.setBounds(12, 77, 134, 20);
 		contentPane.add(lblIntentspec);
 		
 		chkExtraValueReplace = new JCheckBox("ExtraValueReplace");
+		chkExtraValueReplace.setFont(new Font("Arial", Font.PLAIN, 12));
 		chkExtraValueReplace.setSelected(true);
-		chkExtraValueReplace.setBounds(879, 676, 134, 23);
+		chkExtraValueReplace.setBounds(556, 676, 134, 23);
 		contentPane.add(chkExtraValueReplace);
 		
 		JLabel lblAdbCommands = new JLabel("ADB Commands : ");
+		lblAdbCommands.setFont(new Font("Arial", Font.PLAIN, 12));
 		lblAdbCommands.setBounds(12, 388, 106, 15);
 		contentPane.add(lblAdbCommands);
 		
 		fc.addChoosableFileFilter(new APKOrAndroidManifestFilter());
 		fc.setAcceptAllFileFilterUsed(false);
+		String importpath = Config.getImportPath();
+		if (importpath != null) {
+			fc.setCurrentDirectory(new File(importpath));
+		}
 		
 		btnImportFromApk = new JButton("Import");
+		btnImportFromApk.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnImportFromApk.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
@@ -246,22 +272,13 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		        }
 		        
 		        file = fc.getSelectedFile();
+		        
+		        Config.putImportPath(fc.getCurrentDirectory().getAbsolutePath());				
 				
-				// Activity, Service, Broadcast Receiver 선택된 컴포넌트 타입의 Intent Spec을 가져오기
-				String compTypeOption = "-all";
-				int cbo = cboComponent.getSelectedIndex();
-				switch (cbo) {
-				case 0: compTypeOption = "-activity";
-						break;
-				case 1: return; // Not support for Broadcast Receiver type
-				case 2: compTypeOption = "-service";
-						break;
-				}
-				
-				
-				String command = "java -cp " + System.getProperty("user.dir") 
-									+ "/../GenIntentSpecfromAPK/bin/GenIntentSpecfromAPK.jar com.example.java.GenIntentSpecFromAPK " 
-									+ compTypeOption + " " 
+				String command = "java -cp \"" 
+									+ System.getProperty("user.dir") + "/bin;"
+									+ System.getProperty("user.dir") + "/lib/*\" " 
+									+ "com.example.java.GenIntentSpecFromAPK " 
 									+ "\"" + file.getAbsolutePath() + "\""; // ' ' in the file name
 				
 				System.out.println("RUN: " + command);
@@ -274,6 +291,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		contentPane.add(btnImportFromApk);
 		
 		JButton btnClear = new JButton("Clear");
+		btnClear.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnClear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				txtIntentSpec.setText("");
@@ -283,6 +301,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		contentPane.add(btnClear);
 		
 		JButton btnClear_1 = new JButton("Clear");
+		btnClear_1.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnClear_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				txtAdbCommand.setText("");
@@ -322,14 +341,17 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 	{
 		String[] adbCommand = parseStr(txtAdbCommand.getText().trim());
 
-		DefaultTableModel modelAdbCommand = this.benchmarkUI.getModelAdbCommand();
+		if (adbCommand.length > 0)
+			Benchmark.main(adbCommand);
 		
-		for(int i = 0; i < adbCommand.length; i++)
-		{
-			modelAdbCommand.addRow(makeRow(i, adbCommand[i]));			
-		}
+		//DefaultTableModel modelAdbCommand = this.benchmarkUI.getModelAdbCommand();
 		
-		Close();
+		//for(int i = 0; i < adbCommand.length; i++)
+		//{
+			//modelAdbCommand.addRow(makeRow(i, adbCommand[i]));			
+		//}
+		
+		//Close();
 	}
 	
 	public String[] parseStr(String str)

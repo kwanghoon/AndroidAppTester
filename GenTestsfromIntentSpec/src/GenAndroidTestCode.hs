@@ -7,10 +7,33 @@ import Language.Java.Lexer
 
 import IntentSpec
 
-genAndroidTestCode :: Int -> String -> IntentSpec -> [String] -> IO ()
-genAndroidTestCode 0 intentspec intents args = genActivityTestCode intents args
-genAndroidTestCode 1 intentspec intents args = genBroadcastReceiverTestCode intents args
-genAndroidTestCode 2 intentspec intents args = genServiceTestCode intents args
+genAndroidTestCode :: String -> IntentSpec -> [String] -> IO ()
+genAndroidTestCode intentspec intents args = mapM_ (f args) (zip [1..] intents)
+    where
+        f :: [String] -> (Int, Intent) -> IO ()
+        f args (n, intent) = genAndroidTestCode' (show n) args intent intent 
+        
+genAndroidTestCode' suffix args intent []                                            
+    = return () 
+genAndroidTestCode' suffix args intent (Component (Just Activity)          pkg clz : xs) 
+    = genActivityTestCode pkg' clz' suffix test_pkg_name intent
+    where
+      (pkg', clz') = getPkgClz pkg clz
+      test_pkg_name = args !! 0
+genAndroidTestCode' suffix args intent (Component (Just Service)           pkg clz : xs) 
+    = genServiceTestCode  pkg' clz' suffix test_pkg_name intent
+    where
+      (pkg', clz') = getPkgClz pkg clz
+      test_pkg_name   = args !! 0
+genAndroidTestCode' suffix args intent (Component (Just BroadcastReceiver) pkg clz : xs) 
+    = return ()
+genAndroidTestCode' suffix args intent (Component Nothing                  pkg clz : xs) 
+    =  genActivityTestCode pkg' clz' suffix test_pkg_name intent
+    where
+      (pkg', clz') = getPkgClz pkg clz
+      test_pkg_name = args !! 0
+genAndroidTestCode' suffix args intent (_                                      : xs) 
+    = genAndroidTestCode' suffix args intent xs 
 
 {--------------------------------------------------------------------------------------- 
 A sample test code for Activity
@@ -57,43 +80,41 @@ public class ${TEST_CLASS_NAME} extends ActivityUnitTestCase<${CLASS_NAME}> {
 
 ---------------------------------------------------------------------------------------}
 
-genActivityTestCode :: IntentSpec -> [String] -> IO ()
-genActivityTestCode is args = do
-    compUnit <- genActivityTestCode' pkg_name test_class_name class_name is
+genActivityTestCode :: String -> String -> String -> String -> Intent -> IO ()
+genActivityTestCode pkg_name class_name suffix test_pkg_name intent = do
+    compUnit <- genActivityTestCode' pkg_name class_name test_pkg_name test_class_name intent
     -- writeFile outputPath (prettyPrint compUnit)
+    putStrLn $ "#" ++ outputPath
     putStrLn $ prettyPrint $ compUnit
-    -- mapM_ (putStrLn . show) is
-    where pkg_name   = args !! 0
-          class_name = args !! 1
-          suffix     = args !! 2
-          -- output     = args !! 3
-          
-          _suffix    = if suffix == "" then suffix else "_" ++ suffix
+    putStrLn " "
+    where path            = pkgnameToPath test_pkg_name ++ "/"
           test_class_name = class_name ++ "Test" ++ _suffix
-          -- outputPath = output ++ test_class_name ++ ".java"  
+          outputPath      = path ++ test_class_name ++ ".java"  
+          _suffix         = if suffix == "" then suffix else "_" ++ suffix
           
-          
-genActivityTestCode' pkg_name test_class_name class_name is = do
+genActivityTestCode' pkg_name class_name test_pkg_name test_class_name  intent = do
     return compUnit
     where
-        pkg_name_ids = map Ident (pkgnameToIds pkg_name)
-        compUnit = CompilationUnit (Just $ PackageDecl $ Name pkg_name_ids)
+        pkg_name_ids      = map Ident (pkgnameToIds pkg_name)
+        test_pkg_name_ids = map Ident (pkgnameToIds test_pkg_name)
+        compUnit = CompilationUnit (Just $ PackageDecl $ Name test_pkg_name_ids)
                     [ ImportDecl False (Name [Ident "android", Ident "content", Ident "Intent"]) False
                     , ImportDecl False (Name [Ident "android", Ident "content", Ident "ComponentName"]) False
                     , ImportDecl False (Name [Ident "android", Ident "test", Ident "ActivityUnitTestCase"]) False
                     , ImportDecl False (Name [Ident "android", Ident "net", Ident "Uri"]) False
                     , ImportDecl False (Name [Ident "java", Ident "net", Ident "URI"]) False
+                    , ImportDecl False (Name $ pkg_name_ids ++ [Ident class_name]) False
                     ]
                     [ClassTypeDecl (ClassDecl [Public] (Ident test_class_name) [] 
                         (Just (ClassRefType (ClassType [(Ident "ActivityUnitTestCase",
                                     [ActualType (ClassRefType (ClassType [(Ident class_name, [])]))])]))) [] 
-                        (ClassBody (constr : genActivityTestMethodCode pkg_name test_class_name class_name is)))]
+                        (ClassBody (constr : genActivityTestMethodCode pkg_name test_class_name class_name intent)))]
         constr = MemberDecl (ConstructorDecl [Public] [] (Ident test_class_name) [] []
                         (ConstructorBody (Just (SuperInvoke [] 
                             [ClassLit (Just (RefType (ClassRefType (ClassType [(Ident class_name, [])]))))] )) []))
                             
-genActivityTestMethodCode pkg_name test_class_name class_name is = 
-    map (\pair -> testMethod pair startactivity) $ zip is [1..]
+genActivityTestMethodCode pkg_name test_class_name class_name intent = 
+    map (\pair -> testMethod pair startactivity) $ zip [intent] [1..]
     where
         startactivity = BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident "startActivity"]) 
                             [ExpName (Name [Ident locVarintent]),Lit Null,Lit Null]))) 
@@ -134,9 +155,9 @@ testStmt (Data uri) = mkTrycatch
 testStmt (Type t) =
     [ BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident locVarintent,Ident "setType"]) 
         [Lit (String t)]))) ]
-testStmt (Component pkg pkgclz) = 
+testStmt (Component comptype pkg clz) = 
     [ BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident locVarintent,Ident "setClassName"]) 
-        [Lit (String pkg), Lit (String $ pkg ++ pkgclz)]))) ]
+        [Lit (String pkg), Lit (String $ getFullClz pkg clz)]))) ]
 testStmt (Extra extras) = concat $ map testStmtExtra extras
 testStmt (Flag flags) = [ ]
 --    map (\flag -> 
@@ -187,8 +208,8 @@ testStmtExtra (key, FloatArray floats) =
 
 ---------------------------------------------------------------------------------------
         
-genBroadcastReceiverTestCode :: IntentSpec -> [String] -> IO ()
-genBroadcastReceiverTestCode is args = putStrLn "*** Not support for generating Broadcast Receiver test code"
+genBroadcastReceiverTestCode :: [String] -> IO ()
+genBroadcastReceiverTestCode args = putStrLn "*** Not support for generating Broadcast Receiver test code"
 
 {---------------------------------------------------------------------------------------  
 입력: 
@@ -239,37 +260,37 @@ public class ${TEST_CLASS_NAME} extends ServiceTestCase<${CLASS_NAME}> {
 
 ---------------------------------------------------------------------------------------}
 
-genServiceTestCode :: IntentSpec -> [String] -> IO ()
-genServiceTestCode is args = do
-    compUnit <- genServiceTestCode' pkg_name test_class_name class_name is
+genServiceTestCode :: String -> String -> String -> String -> Intent -> IO ()
+genServiceTestCode pkg_name class_name suffix test_pkg_name intent = do
+    compUnit <- genServiceTestCode' pkg_name class_name test_pkg_name test_class_name intent
     -- writeFile outputPath (prettyPrint compUnit)
+    putStrLn $ "#" ++ outputPath
     putStrLn $ prettyPrint $ compUnit
     -- mapM_ (putStrLn . show) is
-    where pkg_name   = args !! 0
-          class_name = args !! 1
-          suffix     = args !! 2
-          -- output     = args !! 3
-          
-          _suffix    = if suffix == "" then suffix else "_" ++ suffix
+    where path            = pkgnameToPath test_pkg_name ++ "/"
           test_class_name = class_name ++ "Test" ++ _suffix
-          -- outputPath = output ++ test_class_name ++ ".java"
+          outputPath      = path ++ test_class_name ++ ".java"         
+          _suffix         = if suffix == "" then suffix else "_" ++ suffix
 
-genServiceTestCode' pkg_name test_class_name class_name is = do
+genServiceTestCode' pkg_name class_name test_pkg_name test_class_name intent = do
     return compUnit
     where
-        pkg_name_ids = map Ident (pkgnameToIds pkg_name)
-        compUnit = CompilationUnit (Just $ PackageDecl $ Name pkg_name_ids)
+        pkg_name_ids      = map Ident (pkgnameToIds pkg_name)
+        test_pkg_name_ids = map Ident (pkgnameToIds test_pkg_name)
+        
+        compUnit = CompilationUnit (Just $ PackageDecl $ Name test_pkg_name_ids)
                     [ ImportDecl False (Name [Ident "android", Ident "content", Ident "Intent"]) False
                     , ImportDecl False (Name [Ident "android", Ident "content", Ident "ComponentName"]) False
                     , ImportDecl False (Name [Ident "android", Ident "test", Ident "ServiceTestCase"]) False
                     , ImportDecl False (Name [Ident "android", Ident "net", Ident "Uri"]) False
                     , ImportDecl False (Name [Ident "java", Ident "net", Ident "URI"]) False
+                    , ImportDecl False (Name $ pkg_name_ids ++ [Ident class_name]) False
                     ]
                     [ClassTypeDecl (ClassDecl [Public] (Ident test_class_name) [] 
                         (Just (ClassRefType (ClassType [(Ident "ServiceTestCase",
                                     [ActualType (ClassRefType (ClassType [(Ident class_name, [])]))])]))) [] 
                         (ClassBody (constr : setup : teardown 
-                                        : genServiceTestMethodCode pkg_name test_class_name class_name is)))]
+                                        : genServiceTestMethodCode pkg_name test_class_name class_name intent)))]
         constr = MemberDecl (ConstructorDecl [Public] [] (Ident test_class_name) [] []
                         (ConstructorBody (Just (SuperInvoke [] 
                             [ClassLit (Just (RefType (ClassRefType (ClassType [(Ident class_name, [])]))))] )) []))
@@ -284,20 +305,26 @@ genServiceTestCode' pkg_name test_class_name class_name is = do
                             [BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident "shutdownService"]) []))),
                              BlockStmt (ExpStmt (MethodInv (SuperMethodCall [] (Ident "tearDown") []))) ] ))))
           
-genServiceTestMethodCode pkg_name test_class_name class_name is = 
-    map (\pair -> testMethod pair startservice) $ zip is [1..]
+genServiceTestMethodCode pkg_name test_class_name class_name intent = 
+    map (\pair -> testMethod pair startservice) $ zip [intent] [1..]
     where
         startservice = BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident "startService"]) 
                             [ExpName (Name [Ident locVarintent])]))) 
                             
 -- Utility Functions
 
-pkgnameToIds :: String -> [String]
-pkgnameToIds []       = []
-pkgnameToIds pkg_name = h : pkgnameToIds t  
-    where
-        h = takeWhile (/= '.') pkg_name
-        t = dropWhile (== '.') $ drop (length h) pkg_name
+--pkgnameToIds :: String -> [String]
+--pkgnameToIds []       = []
+--pkgnameToIds pkg_name = h : pkgnameToIds t  
+--    where
+--        h = takeWhile (/= '.') pkg_name
+--        t = dropWhile (== '.') $ drop (length h) pkg_name
+--        
+--pkgnameToPath pkg_name = f (pkgnameToIds pkg_name)
+--    where
+--        f []     = ""
+--        f [x]    = x
+--        f (x:xs) = x ++ "/" ++ f xs        
         
 ---
 test = case parser compilationUnit "import java.util.*; public class MyClass extends Object { public MyClass() { super(MainActivity.class); } }" of

@@ -914,6 +914,25 @@ public class ParserOnIntent <T> {
 			//return sp.failure();
 		}
 		errmsg = errToken(s1Tuplelist.get(0).getInp());
+		
+		String value = s1Tuplelist.get(0).getValue();
+		for (IntentData.ComponentType ct : IntentData.ComponentType.values()) {
+			if(ct.toString().equals(value)) {
+				// Set the component type
+				intentData.setComponentType(value);
+				
+				// and start parsing the component name again
+				s1Tuplelist = idOrDot(s1Tuplelist.get(0).getInp());
+				if(s1Tuplelist.isEmpty())
+				{
+					throw new MalformedIntentException("couldn't parse Component field. Token : " + errmsg, 13);
+					//return sp.failure();
+				}
+				errmsg = errToken(s1Tuplelist.get(0).getInp());
+				
+				break;
+			}
+		}
 
 		tmpTuplelist = symbol("/", s1Tuplelist.get(0).getInp());
 		if(tmpTuplelist.isEmpty())

@@ -22,8 +22,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,7 +54,6 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 	private JTextArea txtAdbCommand;
 	private JTextArea txtIntentSpec;
 	private JTextField txtCount;
-	private JComboBox cboComponent;
 	private JComboBox cboMakeMode;
 	private JCheckBox chkExtraValueReplace;
 	
@@ -72,8 +73,6 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 	private static String genCommand;
 	private JTextField textOutputDir;
 	private JTextField textPackage;
-	private JTextField textClass;
-	private JTextField textTestNo;
 	
 	private JLabel lblTestCodeFileName;
 	
@@ -103,7 +102,7 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					GenAndroidTestCodeUI frame = new GenAndroidTestCodeUI(benchmarkUI);
+					GenAndroidTestCodeUI frame = new GenAndroidTestCodeUI(benchmarkUI, args);
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -111,19 +110,20 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 			}
 		});
 	}
-
+	
 	/**
 	 * Create the frame.
 	 */
-	public GenAndroidTestCodeUI(Benchmark mUI) {
+	public GenAndroidTestCodeUI(Benchmark mUI, String[] args) {
 		addFileHandler(logger);
 		
-		setTitle("Generating Android Test Code");
+		setTitle("Android Test Code");
 		
 		this.benchmarkUI = mUI;
 		
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 1259, 750);
+		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//setBounds(100, 100, 1259, 750);
+		setBounds(100, 100, 1111, 754);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -132,85 +132,46 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		scrollPane.setBounds(12, 449, 1219, 221);
+		scrollPane.setBounds(512, 162, 571, 525);
 		contentPane.add(scrollPane);
 		
 		txtAdbCommand = new JTextArea();
-		txtAdbCommand.setFont(new Font("Courier New", Font.PLAIN, 12));
+		txtAdbCommand.setFont(new Font("Courier New", Font.PLAIN, 16));
 		scrollPane.setViewportView(txtAdbCommand);
 		
 		JButton btnOk = new JButton("SAVE");
+		btnOk.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnOk.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String pkg = textPackage.getText();
-				String clz = textClass.getText();
-				String testno = textTestNo.getText();
 				
-				if (pkg==null || pkg.equals("") 
-						|| clz==null || clz.equals("") 
-						|| testno==null || testno.equals(""))
+				if (pkg==null || pkg.equals(""))
 					return;
 				
 				String outdir = textOutputDir.getText() + "/";
-				String pkgdir = pkg.replaceAll("\\.", "/") + "/";
-				String dirtosave = outdir + pkgdir;
 				
-				File f_dirtosave = new File(dirtosave);
-				if (f_dirtosave.exists() == false) {
-					f_dirtosave.mkdirs();
-				}
-				else {
-					File f_filetosave = new File(outdir + getTestFileName(pkg, clz,testno));
-					if (f_filetosave.exists()) {
-						Object[] options = {"Yes", "No" };
-						int n = JOptionPane.showOptionDialog(GenAndroidTestCodeUI.this,
-						    "Are you sure to overwrite the existing file?",
-						    "Question",
-						    JOptionPane.YES_NO_CANCEL_OPTION,
-						    JOptionPane.QUESTION_MESSAGE,
-						    null,
-						    options,
-						    options[1]);
-						
-						if( n==1 ) return;
-					}
-					
-					
-				}
-				
-				File f_filetosave = new File(outdir + getTestFileName(pkg, clz,testno));
-				BufferedWriter bw = null;
-				try {
-					bw = new BufferedWriter(new FileWriter(f_filetosave));
-					bw.write(txtAdbCommand.getText());
-					bw.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				} 
+				saveAndroidTestCode(pkg, outdir, txtAdbCommand.getText(), GenAndroidTestCodeUI.this, false); 
 				
 				
 			}
 		});
 		
-		btnOk.setBounds(1021, 672, 99, 30);
+		btnOk.setBounds(764, 127, 99, 30);
 		contentPane.add(btnOk);
 		
 		JButton btnCancel = new JButton("Cancel");
+		btnCancel.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnCancel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				Close();
 			}
 		});
-		btnCancel.setBounds(1132, 672, 99, 30);
+		btnCancel.setBounds(984, 127, 99, 30);
 		contentPane.add(btnCancel);
 		
-		cboComponent = new JComboBox();
-		cboComponent.setModel(new DefaultComboBoxModel(new String[] {"Activity", "Broadcast Receiver", "Service"}));
-		cboComponent.setBounds(158, 31, 129, 30);
-		contentPane.add(cboComponent);
-		
-		JButton btnMake = new JButton("Generate Android Test Code");
+		JButton btnMake = new JButton("Generate");
+		btnMake.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnMake.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 			}
@@ -220,12 +181,8 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 			public void mousePressed(MouseEvent arg0) {
 				
 				String pkg = textPackage.getText();
-				String clz = textClass.getText();
-				String testno = textTestNo.getText();
 				
-				if (pkg==null || pkg.equals("") 
-						|| clz==null || clz.equals("") 
-						|| testno==null || testno.equals(""))
+				if (pkg==null || pkg.equals(""))
 					return;
 				
 				String command = System.getProperty("user.dir") 
@@ -242,70 +199,84 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 					intentSepc = intentSepc + "\""; 
 				}
 				
-
-				
 				command = command + cboMakeMode.getSelectedIndex() + " " +
-								    cboComponent.getSelectedIndex() + " " +
 								    txtCount.getText() + " " +
 								    intentSepc + " " +
-								    pkg + " " +
-									clz + " " +
-									testno;
+								    pkg;
 				
 				System.out.println("RUN: " + command);
 				
 				ExecuteShellCommand.executeMakeTestArtifacts(GenAndroidTestCodeUI.this, command);
 			}
 		});
-		btnMake.setBounds(487, 31, 209, 30);
+		btnMake.setBounds(654, 127, 98, 30);
 		contentPane.add(btnMake);
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
-		scrollPane_1.setBounds(12, 162, 1219, 209);
+		scrollPane_1.setBounds(12, 106, 482, 581);
 		scrollPane_1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane_1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		contentPane.add(scrollPane_1);
 		
 		txtIntentSpec = new JTextArea();
+		txtIntentSpec.setFont(new Font("Monospaced", Font.PLAIN, 16));
 		//txtIntentSpec.setBounds(12, 98, 1219, 97);
 		//contentPane.add(txtIntentSpec);
 		scrollPane_1.setViewportView(txtIntentSpec);
 		
+		if (args.length >= 1) {
+			txtIntentSpec.setText("");
+			
+			Scanner scan = new Scanner(new StringReader(args[0]));
+			
+			while (scan.hasNextLine()) {
+				txtIntentSpec.append(scan.nextLine() + "\n");
+			}
+		}
+		
 		cboMakeMode = new JComboBox();
+		cboMakeMode.setFont(new Font("Arial", Font.PLAIN, 12));
 		cboMakeMode.setModel(new DefaultComboBoxModel(new String[] {"Compatible", "Shape-Compatible", "Random"}));
 		cboMakeMode.setBounds(12, 31, 134, 30);
 		contentPane.add(cboMakeMode);
 		
 		txtCount = new JTextField();
-		txtCount.setBounds(299, 33, 176, 28);
+		txtCount.setFont(new Font("Arial", Font.PLAIN, 12));
+		txtCount.setBounds(158, 33, 336, 28);
 		contentPane.add(txtCount);
 		txtCount.setColumns(10);
 		
 		JLabel lblMakemode = new JLabel("Mode : ");
+		lblMakemode.setFont(new Font("Arial", Font.PLAIN, 12));
 		lblMakemode.setBounds(12, 10, 75, 20);
 		contentPane.add(lblMakemode);
 		
-		JLabel lblComponent = new JLabel("Component : ");
-		lblComponent.setBounds(159, 10, 89, 20);
-		contentPane.add(lblComponent);
-		
 		JLabel lblCount = new JLabel("Count :");
-		lblCount.setBounds(299, 10, 75, 20);
+		lblCount.setFont(new Font("Arial", Font.PLAIN, 12));
+		lblCount.setBounds(158, 10, 75, 20);
 		contentPane.add(lblCount);
 		
 		JLabel lblIntentspec = new JLabel("Intent Specification :");
-		lblIntentspec.setBounds(12, 132, 134, 20);
+		lblIntentspec.setFont(new Font("Arial", Font.PLAIN, 12));
+		lblIntentspec.setBounds(12, 76, 134, 20);
 		contentPane.add(lblIntentspec);
 		
 		chkExtraValueReplace = new JCheckBox("ExtraValueReplace");
+		chkExtraValueReplace.setFont(new Font("Arial", Font.PLAIN, 12));
 		chkExtraValueReplace.setSelected(true);
-		chkExtraValueReplace.setBounds(879, 676, 134, 23);
+		chkExtraValueReplace.setBounds(360, 693, 134, 23);
 		contentPane.add(chkExtraValueReplace);
 		
 		fc.addChoosableFileFilter(new APKOrAndroidManifestFilter());
 		fc.setAcceptAllFileFilterUsed(false);
+		String importpath = Config.getImportPath();
+		if (importpath != null) {
+			fc.setCurrentDirectory(new File(importpath));
+		}
+		
 		
 		btnImportFromApk = new JButton("Import");
+		btnImportFromApk.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnImportFromApk.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
@@ -322,22 +293,13 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 		        }
 		        
 		        file = fc.getSelectedFile();
+		        
+		        Config.putImportPath(fc.getCurrentDirectory().getAbsolutePath());
 				
-				// Activity, Service, Broadcast Receiver 선택된 컴포넌트 타입의 Intent Spec을 가져오기
-				String compTypeOption = "-all";
-				int cbo = cboComponent.getSelectedIndex();
-				switch (cbo) {
-				case 0: compTypeOption = "-activity";
-						break;
-				case 1: return; // Not support for Broadcast Receiver type
-				case 2: compTypeOption = "-service";
-						break;
-				}
-				
-				
-				String command = "java -cp " + System.getProperty("user.dir") 
-									+ "/../GenIntentSpecfromAPK/bin/GenIntentSpecfromAPK.jar com.example.java.GenIntentSpecFromAPK " 
-									+ compTypeOption + " " 
+				String command = "java -cp " 
+									+ System.getProperty("user.dir") + "/bin;" 
+									+ System.getProperty("user.dir") + "/lib/* " 
+									+ "com.example.java.GenIntentSpecFromAPK " 
 									+ "\"" + file.getAbsolutePath() + "\""; // ' ' in the file name
 				
 				System.out.println("RUN: " + command);
@@ -346,27 +308,34 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 				ExecuteShellCommand.executeImportIntentSpecCommand(GenAndroidTestCodeUI.this, command);
 			}
 		});
-		btnImportFromApk.setBounds(149, 127, 99, 30);
+		btnImportFromApk.setBounds(285, 71, 99, 30);
 		contentPane.add(btnImportFromApk);
 		
 		JButton btnClear = new JButton("Clear");
+		btnClear.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnClear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				txtIntentSpec.setText("");
 			}
 		});
-		btnClear.setBounds(253, 127, 97, 30);
+		btnClear.setBounds(395, 71, 97, 30);
 		contentPane.add(btnClear);
 		
 		textOutputDir = new JTextField();
-		textOutputDir.setBounds(12, 410, 1219, 30);
+		textOutputDir.setFont(new Font("Arial", Font.PLAIN, 12));
+		textOutputDir.setBounds(667, 32, 416, 30);
 		contentPane.add(textOutputDir);
 		textOutputDir.setColumns(10);
 		
 		fcOutput.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		fcOutput.setAcceptAllFileFilterUsed(false);
+		importpath = Config.getImportPath();
+		if (importpath != null) {
+			fcOutput.setCurrentDirectory(new File(importpath));
+		}
 		
-		JButton btnOutputDirectory = new JButton("Output Directory :");
+		JButton btnOutputDirectory = new JButton("Test Code Path :");
+		btnOutputDirectory.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnOutputDirectory.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int returnVal = fcOutput.showOpenDialog(GenAndroidTestCodeUI.this);
@@ -378,96 +347,62 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 		        }
 		        
 		        file = fcOutput.getSelectedFile();
+		        
+		        Config.putImportPath(fcOutput.getCurrentDirectory().getAbsolutePath());
 			
 		        textOutputDir.setText(file.getAbsolutePath());
 			}
 		});
-		btnOutputDirectory.setBounds(12, 381, 134, 26);
+		btnOutputDirectory.setBounds(503, 31, 152, 30);
 		contentPane.add(btnOutputDirectory);
 		
-		lblTestCodeFileName = new JLabel("*.java");
-		lblTestCodeFileName.setBounds(158, 387, 890, 15);
+		lblTestCodeFileName = new JLabel("${TEST CODE PATH}/${TEST CODE PACKAGE}/${TEST CODE CLASS}.java");
+		lblTestCodeFileName.setFont(new Font("Arial", Font.PLAIN, 12));
+		lblTestCodeFileName.setBounds(512, 106, 571, 21);
 		contentPane.add(lblTestCodeFileName);
 
 		
-		JLabel lblPackage = new JLabel("Package :");
-		lblPackage.setBounds(12, 71, 57, 15);
+		JLabel lblPackage = new JLabel("Test Code Package :");
+		lblPackage.setFont(new Font("Arial", Font.PLAIN, 12));
+		lblPackage.setBounds(512, 79, 143, 15);
 		contentPane.add(lblPackage);
 		
 		pkgName = "";
 		
-		JLabel lblClass = new JLabel("Class :");
-		lblClass.setBounds(378, 71, 57, 15);
-		contentPane.add(lblClass);
-		
 		clzName = "";
-		
-		JLabel lblTestNo = new JLabel("Test No. :");
-		lblTestNo.setBounds(600, 71, 57, 15);
-		contentPane.add(lblTestNo);
 		
 		testNo = "";
 		
 		textPackage = new JTextField();
+		textPackage.setFont(new Font("Arial", Font.PLAIN, 12));
 		textPackage.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyTyped(KeyEvent arg0) {
 				char ch = arg0.getKeyChar();
 				String ch_s = ch == '\b' ? "" : ch + "" ; 
-				setTestFileName(textPackage.getText() + ch_s
-						, textClass.getText()
-						, textTestNo.getText());
+				setTestFileName(textPackage.getText() + ch_s, "", "");
 			}
 		});
-		textPackage.setBounds(12, 92, 362, 30);
+		textPackage.setBounds(667, 72, 416, 30);
 		contentPane.add(textPackage);
 		textPackage.setColumns(10);
 		
-		textClass = new JTextField();
-		textClass.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyTyped(KeyEvent arg0) {
-				char ch = arg0.getKeyChar();
-				String ch_s = ch == '\b' ? "" : ch + "" ; 
-				setTestFileName(textPackage.getText()
-						, textClass.getText() + ch_s
-						, textTestNo.getText());
-			}
-		});
-		textClass.setBounds(378, 91, 219, 31);
-		contentPane.add(textClass);
-		textClass.setColumns(10);
-		
-		textTestNo = new JTextField();
-		textTestNo.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyTyped(KeyEvent arg0) {
-				char ch = arg0.getKeyChar();
-				String ch_s = ch == '\b' ? "" : ch + "" ; 
-				setTestFileName(textPackage.getText()
-						, textClass.getText()
-						, textTestNo.getText()  + ch_s);
-			}
-		});
-		textTestNo.setBounds(600, 91, 96, 31);
-		contentPane.add(textTestNo);
-		textTestNo.setColumns(10);
-		
 		JButton btnClearAndroidTestCode = new JButton("Clear");
+		btnClearAndroidTestCode.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnClearAndroidTestCode.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				txtAdbCommand.setText("");
 			}
 		});
-		btnClearAndroidTestCode.setBounds(1132, 381, 97, 23);
+		btnClearAndroidTestCode.setBounds(875, 128, 97, 28);
 		contentPane.add(btnClearAndroidTestCode);
 		
+		JLabel lblAndroidTestCode = new JLabel("Android Test Code:");
+		lblAndroidTestCode.setFont(new Font("Arial", Font.PLAIN, 12));
+		lblAndroidTestCode.setBounds(512, 135, 134, 15);
+		contentPane.add(lblAndroidTestCode);
+		
 		testFileName = "";
-		
-		
-		setTestFileName(textPackage.getText()
-				, textClass.getText()
-				, textTestNo.getText());
 	}
 	
 	public void setTestFileName(String pkg, String clz, String testno) {		
@@ -475,10 +410,9 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 	}
 	
 	public String getTestFileName(String pkg, String clz, String testno) {
-		String _pkg = pkg==null || pkg.equals("") ? "${PACKAGE NAME}" : pkg.replaceAll("\\.", "/");
-		String _clz = clz==null || clz.equals("") ? "${CLASS NAME}" : clz;
-		String _testno = testno==null || testno.equals("") ? "${TEST NUMBER}" : testno;
-		return _pkg + "/" + _clz + "Test_" + _testno + ".java";
+		String _pkg = pkg==null || pkg.equals("") ? "${TEST PACKAGE PATH}" : pkg.replaceAll("\\.", "/");
+
+		return "${TEST CODE PATH}/" + _pkg + "/${TEST CODE CLASS}" + ".java";
 	}
 	
 	public void appendTxt_testArtifacts(String str)
@@ -749,7 +683,93 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
         logger.addHandler(fileHandler);
     }
     
-    private class APKOrAndroidManifestFilter extends FileFilter {
+    public static void saveAndroidTestCode(String pkg, String outdir, String testcode, JFrame jframe, boolean overwrite) {
+    	
+    	// Create the directory
+    	String pkgdir = pkg.replaceAll("\\.", "/") + "/";
+    	outdir = outdir + "/";
+		String dirtosave = outdir + pkgdir;
+		
+		File f_dirtosave = new File(dirtosave);
+		if (f_dirtosave.exists() == false) {
+			f_dirtosave.mkdirs();
+		}
+		
+		// Write Java files
+		BufferedWriter bw = null;
+		try {
+			Scanner scan = new Scanner(new StringReader(testcode));
+			String pkgpathClzDotJava = null;
+			
+			// Find '#'
+			while (scan.hasNextLine()) {
+				String line = scan.nextLine();
+				
+				if (line.charAt(0) == '#') {
+					pkgpathClzDotJava = line.substring(1);
+					break;
+				}
+			}
+			
+			while (scan.hasNextLine()) {				
+
+				if (pkgpathClzDotJava == null) break; // End of text
+				
+				// Save the file
+				File f_filetosave = new File(outdir + pkgpathClzDotJava);
+				pkgpathClzDotJava = null;
+				
+				int n = 0; // Overwrite if there is any existing file.
+				
+				if (f_filetosave.exists() && overwrite==false) {
+					Object[] options = {"Yes", "No", "Yes To All", "Cancel" };
+					n = JOptionPane.showOptionDialog(jframe,
+					    "Are you sure to overwrite the existing file?" 
+							+ "\n"
+					    	+ f_filetosave.getAbsolutePath(),
+					    "Question",
+					    JOptionPane.YES_NO_CANCEL_OPTION,
+					    JOptionPane.QUESTION_MESSAGE,
+					    null,
+					    options,
+					    options[1]);
+					
+					if (n == 2) {
+						overwrite = true;
+					}
+					
+					if (n == 3) {
+						break;
+					}
+				}
+				
+				if (n == 0 || n == 2) {
+					bw = new BufferedWriter(new FileWriter(f_filetosave));
+					
+					while (scan.hasNextLine()) {
+							String line = scan.nextLine();
+							
+							if (line.charAt(0) == '#') {
+								pkgpathClzDotJava = line.substring(1);
+								break;
+							}
+							else {
+								bw.write(line + "\n");
+							}
+					}
+					
+					bw.close();
+				}
+			}
+			
+			scan.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private class APKOrAndroidManifestFilter extends FileFilter {
     	 
         //Accept all directories and all apk files.
         public boolean accept(File f) {
@@ -787,5 +807,4 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
             return ext;
         }
     }
-    
 }

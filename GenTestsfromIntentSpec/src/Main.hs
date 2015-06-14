@@ -280,12 +280,34 @@ component :: Parser Field
 component = do symbol "cmp"
                symbol "="
                pname <- idOrDot
+               if isComptype pname then
+                do { pname' <- idOrDot
+                   ; component' (getComptype pname) pname' }
+               else
+                do component' Nothing pname
+                  
+component' :: Maybe CompType -> String -> Parser Field
+component' comptype pname = do               
                symbol "/"
                do cname <- idOrDot
-                  return (Component pname cname)
+                  return (Component comptype pname cname)
                 +++ do symbol "."
                        cname <- idOrDot
-                       return (Component pname ("."  ++ cname))
+                       return (Component comptype pname ("."  ++ cname))
+                       
+isComptype :: String -> Bool
+isComptype "Activity" = True
+isComptype "Service" = True
+isComptype "BroadcastReceiver" = True
+isComptype "ContentProvider" = True
+isComptype _ = False
+      
+getComptype :: String -> Maybe CompType
+getComptype "Activity" = Just Activity
+getComptype "Service" = Just Service
+getComptype "BroadcastReceiver" = Just BroadcastReceiver
+getComptype "ContentProvider" = Just ContentProvider
+getComptype _ = Nothing
 
 extra :: Parser Field
 extra = do symbol "["
@@ -527,7 +549,8 @@ instance Arbitrary Field where
                               
                       5 -> do pkg <- packageElements
                               cls <- classElements
-                              return (Component pkg cls)
+                              comptype <- comptypeElements
+                              return (Component comptype pkg cls) -- Is it OK?
                               
                       6 -> do exts <- extraTupleList
                               return (Extra exts)
@@ -549,7 +572,8 @@ instance Arbitrary Field where
 
                       12 -> do pkg <- componentsArbitrary
                                cls <- componentsArbitrary
-                               return (Component pkg cls)
+                               comptype <- comptypeElements
+                               return (Component comptype pkg cls) -- Is it OK?
 
                       13 -> do exts <- extraArbitrary
                                return (Extra exts)
@@ -605,7 +629,7 @@ removeDuplicateConstructor (Action x : xs) = Action x : removeDuplicateConstruct
 removeDuplicateConstructor (Category x : xs) = removeDuplicateCategoryList (Category x) : removeDuplicateConstructor (xs \\ [Category y | Category y <- xs])
 removeDuplicateConstructor (Data x : xs) = Data x : removeDuplicateConstructor (xs \\ [Data y | Data y <- xs])
 removeDuplicateConstructor (Type x : xs) = Type x : removeDuplicateConstructor (xs \\ [Type y | Type y <- xs])
-removeDuplicateConstructor (Component x1 x2 : xs) = Component x1 x2 : removeDuplicateConstructor (xs \\ [Component y1 y2 | Component y1 y2 <- xs])
+removeDuplicateConstructor (Component maybe x1 x2 : xs) = Component maybe x1 x2 : removeDuplicateConstructor (xs \\ [Component maybe' y1 y2 | Component maybe' y1 y2 <- xs])
 removeDuplicateConstructor (Extra x : xs) = removeDuplicateExtraKeys (Extra x) : removeDuplicateConstructor (xs \\ [Extra y | Extra y <- xs])
 removeDuplicateConstructor (Flag x : xs) = Flag x : removeDuplicateConstructor (xs \\ [Flag y | Flag y <- xs])
 
@@ -628,16 +652,22 @@ removeDuplicateExtraKeys (Extra (xs)) = Extra (rmdupsExtra xs)
 
 replaceComponent :: Intent -> IntentSpec -> IntentSpec
 replaceComponent _ [] = []
-replaceComponent s (d:ds) = addAndRemoveComponentFix [Component x1 x2 | Component x1 x2 <- s] d : replaceComponent s ds
+replaceComponent s (d:ds) = addAndRemoveComponentFix [Component maybe x1 x2 | Component maybe x1 x2 <- s] d : replaceComponent s ds
 
 addAndRemoveComponentFix :: Intent -> Intent -> Intent
-addAndRemoveComponentFix (Component x1 x2 : ss) ds = Component x1 x2 : (ds \\ [Component y1 y2 | Component y1 y2 <- ds])
+addAndRemoveComponentFix (Component maybe x1 x2 : ss) ds = Component maybe x1 x2 : (ds \\ [Component maybe' y1 y2 | Component maybe' y1 y2 <- ds])
 
-makeAdbCommand :: Int -> IntentSpec -> String
-makeAdbCommand _ [] = []
-makeAdbCommand 0 (i:is) = "adb shell am start" ++ makeIntentCommand i ++ "\n" ++ makeAdbCommand 0 is
-makeAdbCommand 1 (i:is) = "adb shell am broadcast" ++ makeIntentCommand i ++ "\n" ++ makeAdbCommand 1 is
-makeAdbCommand 2 (i:is) = "adb shell am startservice" ++ makeIntentCommand i ++ "\n" ++ makeAdbCommand 2 is
+makeAdbCommand :: IntentSpec -> String
+makeAdbCommand [] = []
+makeAdbCommand (i:is) = "adb shell am " ++ makeIntentCompType i ++ makeIntentCommand i ++ "\n" ++ makeAdbCommand is
+
+makeIntentCompType :: Intent -> String
+makeIntentCompType [] = "start"   -- Activity by default
+makeIntentCompType (Component (Just Activity) _ _ : xs) = "start"
+makeIntentCompType (Component (Just Service) _ _ : xs) = "startservice"
+makeIntentCompType (Component (Just BroadcastReceiver) _ _ : xs) = "broadcast"
+makeIntentCompType (Component _ _ _ : xs) = makeIntentCompType xs
+makeIntentCompType (_ : xs) = makeIntentCompType xs 
 
 makeIntentCommand :: Intent -> String
 makeIntentCommand [] = []
@@ -645,7 +675,7 @@ makeIntentCommand (Action x : xs) = " -a " ++ x ++ makeIntentCommand xs
 makeIntentCommand (Category x : xs) = makeCagegory x ++ makeIntentCommand xs
 makeIntentCommand (Data x : xs) = " -d " ++ x ++ makeIntentCommand xs
 makeIntentCommand (Type x : xs) = " -t " ++ x ++ makeIntentCommand xs
-makeIntentCommand (Component x1 x2 : xs) = " -n " ++ x1 ++ "/" ++ x2 ++ makeIntentCommand xs
+makeIntentCommand (Component maybe x1 x2 : xs) = " -n " ++ x1 ++ "/" ++ x2 ++ makeIntentCommand xs
 makeIntentCommand (Extra x : xs)  = makeExtra x ++ makeIntentCommand xs
 makeIntentCommand (Flag x : xs) = makeIntentCommand xs
 
@@ -694,12 +724,12 @@ randomOnly :: Int -> IntentSpec -> IntentSpec
 randomOnly _ [] = []
 randomOnly count (s:ss) = (replaceComponent s (makeTestCaseOfIntentSpec count)) ++ randomOnly count ss
 
-makeTestArtifact :: String -> Int -> IntentSpecStr -> IntentSpec -> [String] -> IO ()
-makeTestArtifact "AdbCommand" component intentSpecS intents args =
-    putStr (makeAdbCommand component intents)
+makeTestArtifact :: String -> IntentSpecStr -> IntentSpec -> [String] -> IO ()
+makeTestArtifact "AdbCommand" intentSpecS intents args =
+    putStr (makeAdbCommand intents)
             
-makeTestArtifact "AndroidTestCode" component intentSpecS intents args = 
-    genAndroidTestCode component intentSpecS intents args
+makeTestArtifact "AndroidTestCode" intentSpecS intents args = 
+    genAndroidTestCode intentSpecS intents args
     
 --    
 type RandomType = Int
@@ -708,26 +738,26 @@ type Count = Int
 type ArtifactType = String
 type ComponentType = Int
 
-make :: ArtifactType -> RandomType -> ComponentType -> Count -> IntentSpecStr -> [String] -> IO ()
-make artifactType randomType component count intentSpecS args
+make :: ArtifactType -> RandomType -> Count -> IntentSpecStr -> [String] -> IO ()
+make artifactType randomType count intentSpecS args
     | randomType==0 = 
         let intents = removeDuplicateConstructorIntentSpec 
                         (passOnly count (eval intentSpecS)) 
-        in  makeTestArtifact artifactType component intentSpecS intents args
+        in  makeTestArtifact artifactType intentSpecS intents args
     | randomType==1 = 
         let intents = removeDuplicateConstructorIntentSpec 
                         (randomUsingSpec count (eval intentSpecS)) 
-        in  makeTestArtifact artifactType component intentSpecS intents args
+        in  makeTestArtifact artifactType intentSpecS intents args
     | randomType==2 = 
         let intents = removeDuplicateConstructorIntentSpec 
                         (randomOnly count (eval intentSpecS)) 
-        in  makeTestArtifact artifactType component intentSpecS intents args
+        in  makeTestArtifact artifactType intentSpecS intents args
 
 main :: IO ()
 main = do hSetEncoding stdout utf8
           args <- getArgs
-          -- artifact type, random type, component type, count, intent spec,
-          make  (args !! 0) (castInt 1 args) (castInt 2 args) (castInt 3 args) (args !! 4) (drop 5 args)
+          -- artifact type, random type, count, intent spec,
+          make  (args !! 0) (castInt 1 args) (castInt 2 args) (args !! 3) (drop 4 args)
 
 castInt :: Int -> [String] -> Int
 castInt 0 (arg:args) = read arg :: Int
@@ -736,7 +766,7 @@ castInt n (arg:args) = castInt (n-1) args
 
 -- >ghc --make Main.hs
 
--- :set args AndroidTestCode 0 0 5 "{ cmp=com.example.khchoi.helloandroid/.MainActivity act=android.intent.action.MAIN }" com.example.khchoi.helloandroid MainActivity 0002 D:\TEMP\
--- :set args AndroidTestCode 0 2 5 "{ cmp=com.example.khchoi.helloandroid/.MyService act=android.intent.action.MAIN }" com.example.khchoi.helloandroid MyService 0001 D:\TEMP\
+-- :set args AndroidTestCode 0 5 "{ cmp=Activity com.example.khchoi.helloandroid/.MainActivity act=android.intent.action.MAIN }" com.example.khchoi.helloandroid.test  
+-- :set args AndroidTestCode 0 5 "{ cmp=Service com.example.khchoi.helloandroid/.MyService act=android.intent.action.MAIN }" com.example.khchoi.helloandroid.test
 
 

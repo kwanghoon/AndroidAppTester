@@ -30,6 +30,8 @@ public class BenchStart {
 	WritableWorkbook workbook;
 	WritableSheet sheet;	
 	
+	boolean flagUseIntentAssertion = false; // IntentAssert 사용 여부
+	
 	public void start(Benchmark ui) 
 	{		
 		Thread worker = new Thread()
@@ -175,32 +177,43 @@ public class BenchStart {
 							+ IntentSpecCatchAndNormal +  IntentSpecCatchAndExit + IntentSpecCatchAndErrorExit
 							+ IntentSpecPassAndNormal + IntentSpecPassAndExit + IntentSpecPassAndErrorExit + CantAnalyze;
 					
-					ui.txtBenchResult.setText("Normal Execution\t\t: " + Normal
-							+ "\nNormal Termination\t\t: " + Exit 
-							+ "\nAbnormal Termination\t\t: " + ErrorExit
-							+ "\n(Assertion False) Normal Execution\t: " + IntentSpecCatchAndNormal
-							+ "\n(Assertion False) Normal Termination\t: " + IntentSpecCatchAndExit
-							+ "\n(Assertion False) Abnormal Termination\t: " + IntentSpecCatchAndErrorExit
-							+ "\n(Assertion True) Normal Execution\t: " + IntentSpecPassAndNormal 
-							+ "\n(Assertion True) Normal Termination\t: " + IntentSpecPassAndExit 
-							+ "\n(Assertion True) Abnormal Termination\t: " + IntentSpecPassAndErrorExit  
-							+ "\nAnalysis Failure\t\t: " + CantAnalyze
-							+ "\nProgress\t: " + (int)(((double)resultCount / ui.modelAdbCommand.getRowCount()) * 100) + "% (" + (resultCount + "/" + ui.modelAdbCommand.getRowCount() + ")"));
+					ui.txtBenchResult.setText("Pass\t: " + (Normal+Exit)
+							// + "\nPass\t\t: " + Exit 
+							+ "\nFail\t: " + ErrorExit
+							
+							+ (flagUseIntentAssertion ?
+									
+							  "\nAssert/F=>Pass\t: " + IntentSpecCatchAndNormal
+							+ "\nAssert/F=>Pass\t: " + IntentSpecCatchAndExit
+							+ "\nAssert/F=>Fail\t: " + IntentSpecCatchAndErrorExit
+							+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndNormal 
+							+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndExit 
+							+ "\nAssert/T=>Fail\t: " + IntentSpecPassAndErrorExit
+							
+							: "")
+							
+							+ "\nProgress\t: " + (int)(((double)resultCount / ui.modelAdbCommand.getRowCount()) * 100) + "% (" + (resultCount + "/" + ui.modelAdbCommand.getRowCount() + ")")
+							+ "\nAnalysis Failure\t: " + CantAnalyze );
 					
 					addRowinExcel("result : " + result.toString());
 					addRowinExcel("------------------------------------------------------------");
 				}
 				
-				String resultAll = "Normal Execution\t\t: " + Normal
-						+ "\nNormal Termination\t\t: " + Exit 
-						+ "\nAbnormal Termination\t\t: " + ErrorExit
-						+ "\n(Assertion False) Normal Execution\t: " + IntentSpecCatchAndNormal
-						+ "\n(Assertion False) Normal Termination\t: " + IntentSpecCatchAndExit
-						+ "\n(Assertion False) Abnormal Termination\t: " + IntentSpecCatchAndErrorExit
-						+ "\n(Assertion True) Normal Execution\t: " + IntentSpecPassAndNormal 
-						+ "\n(Assertion True) Normal Termination\t: " + IntentSpecPassAndExit 
-						+ "\n(Assertion True) Abnormal Termination\t: " + IntentSpecPassAndErrorExit  
-						+ "\nAnalysis Failure\t\t: " + CantAnalyze
+				String resultAll = "Pass\t: " + (Normal + Exit)
+						// + "\nPass\t\t: " + Exit 
+						+ "\nFail\t: " + ErrorExit
+						+ (flagUseIntentAssertion ?
+								
+						  "\nAssert/F=>Pass\t: " + IntentSpecCatchAndNormal
+						+ "\nAssert/F=>Pass\t: " + IntentSpecCatchAndExit
+						+ "\nAssert/F=>Fail\t: " + IntentSpecCatchAndErrorExit
+						+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndNormal 
+						+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndExit 
+						+ "\nAssert/T=>Fail\t: " + IntentSpecPassAndErrorExit
+						
+						: "")
+						
+						+ "\nAnalysis Failure\t: " + CantAnalyze
 						+ "\nResult Count\t\t: " + (Normal + Exit + ErrorExit 
 								+ IntentSpecCatchAndNormal + IntentSpecCatchAndExit + IntentSpecCatchAndErrorExit 
 								+ IntentSpecPassAndNormal + IntentSpecPassAndExit + IntentSpecPassAndErrorExit + CantAnalyze);
@@ -241,11 +254,11 @@ public class BenchStart {
 	public void makeExcel()
 	{
 		try {
-			SimpleDateFormat formatter = new SimpleDateFormat ( "yyyy년MM월dd일 HH시mm분ss초", Locale.KOREA );
+			SimpleDateFormat formatter = new SimpleDateFormat ( "yyyy_MM_dd_HH_mm_ss", Locale.KOREA );
 			Date currentTime = new Date( );
 			String dTime = formatter.format ( currentTime );
 			
-		    String fileName = dTime + ".xls";
+		    String fileName = "LOG_" + dTime + ".xls";
 		    workbook = Workbook.createWorkbook(new File(fileName));
 		    sheet = workbook.createSheet("Benchmark Result", 0);
 		    

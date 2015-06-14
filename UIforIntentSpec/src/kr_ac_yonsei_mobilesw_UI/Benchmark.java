@@ -90,7 +90,6 @@ public class Benchmark extends JFrame {
 	JTextField txtFilter;
 	private JTextField txtAdbPath;
 	private JComboBox cboDeviceID;
-	private JButton btnBenchAdd;
 	private JTable tblAdbCommand;
 	JTextArea txtBenchResult;
 	private JButton btnExecwithfilter;
@@ -102,16 +101,20 @@ public class Benchmark extends JFrame {
 	private static String adbPathString; 
 	
 	static {
-		String osName = System.getProperty("os.name");
-		String osNameMatch = osName.toLowerCase();
-		if(osNameMatch.contains("linux")) {
-			adbPathString = "/home/";
-		} else if(osNameMatch.contains("windows")) {
-			adbPathString = "C:/users/";
-		} else if(osNameMatch.contains("mac os") || osNameMatch.contains("macos") || osNameMatch.contains("darwin")) {
-			adbPathString = "/Users/";
-		} else {
-			adbPathString = "C:/users/"; // Windows OS by default
+		adbPathString = Config.getAdbPath();
+		
+		if (adbPathString == null) {
+			String osName = System.getProperty("os.name");
+			String osNameMatch = osName.toLowerCase();
+			if(osNameMatch.contains("linux")) {
+				adbPathString = "/home/";
+			} else if(osNameMatch.contains("windows")) {
+				adbPathString = "C:/users/";
+			} else if(osNameMatch.contains("mac os") || osNameMatch.contains("macos") || osNameMatch.contains("darwin")) {
+				adbPathString = "/Users/";
+			} else {
+				adbPathString = "C:/users/"; // Windows OS by default
+			}
 		}
 	}
 
@@ -130,7 +133,7 @@ public class Benchmark extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Benchmark frame = new Benchmark();
+					Benchmark frame = new Benchmark(args);
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -142,11 +145,11 @@ public class Benchmark extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Benchmark() {
+	public Benchmark(String[] args) {
 		addFileHandler(logger);
 		
-		setTitle("Generating ADB Commands");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setTitle("ADB Command");
+		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1259, 750);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -184,7 +187,7 @@ public class Benchmark extends JFrame {
 				ExecuteShellCommand.showLogcat(Benchmark.this, command);
 			}
 		});
-		btnViewlogcat.setBounds(1025, 198, 99, 30);
+		btnViewlogcat.setBounds(1018, 155, 99, 30);
 		contentPane.add(btnViewlogcat);
 		
 		btnStart = new JButton("exec");
@@ -194,16 +197,16 @@ public class Benchmark extends JFrame {
 				exec();
 			}
 		});
-		btnStart.setBounds(1073, 144, 79, 30);
+		btnStart.setBounds(1073, 110, 79, 30);
 		contentPane.add(btnStart);
 		
 		txtAdbCommand = new JTextField();
-		txtAdbCommand.setBounds(241, 146, 831, 28);
+		txtAdbCommand.setBounds(241, 112, 831, 28);
 		contentPane.add(txtAdbCommand);
 		txtAdbCommand.setColumns(10);
 		
 		scrollPane = new JScrollPane();
-		scrollPane.setBounds(241, 10, 990, 124);
+		scrollPane.setBounds(241, 10, 990, 92);
 		contentPane.add(scrollPane);
 		
 		txtAdbCommandLog = new JTextArea();
@@ -213,7 +216,7 @@ public class Benchmark extends JFrame {
 		scrollPaneLogcat = new JScrollPane();
 		scrollPaneLogcat.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scrollPaneLogcat.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scrollPaneLogcat.setBounds(241, 238, 990, 464);
+		scrollPaneLogcat.setBounds(241, 217, 990, 485);
 		
 		scrollPaneLogcat.getViewport().setBackground(Color.white);
 		
@@ -313,17 +316,17 @@ public class Benchmark extends JFrame {
 			}
 		});
 		
-		txtFilter.setBounds(241, 200, 661, 28);
+		txtFilter.setBounds(241, 157, 660, 28);
 		contentPane.add(txtFilter);
 		
-		JButton btnClear = new JButton("Clr");
+		JButton btnClear = new JButton("Clear");
 		btnClear.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				LogcatClear();
 			}
 		});
-		btnClear.setBounds(1131, 198, 49, 30);
+		btnClear.setBounds(1120, 155, 62, 30);
 		contentPane.add(btnClear);
 		
 		JButton btnLogcatScrollDown = new JButton("\u25BD");
@@ -349,7 +352,7 @@ public class Benchmark extends JFrame {
 				LogcatLock.unlock();
 			}
 		});
-		btnLogcatScrollDown.setBounds(1184, 198, 47, 30);
+		btnLogcatScrollDown.setBounds(1184, 155, 47, 30);
 		contentPane.add(btnLogcatScrollDown);
 		
 		JComboBox cboLogLevel = new JComboBox();
@@ -381,7 +384,7 @@ public class Benchmark extends JFrame {
 		});
 		
 		cboLogLevel.setModel(new DefaultComboBoxModel(new String[] {"verbose", "debug", "info", "warn", "error"}));
-		cboLogLevel.setBounds(914, 198, 99, 30);
+		cboLogLevel.setBounds(913, 155, 99, 30);
 		contentPane.add(cboLogLevel);
 		
 		txtAdbPath = new JTextField();
@@ -404,11 +407,11 @@ public class Benchmark extends JFrame {
 		contentPane.add(lblAdbPath);
 		
 		cboDeviceID = new JComboBox();
-		cboDeviceID.setBounds(12, 86, 214, 30);
+		cboDeviceID.setBounds(12, 115, 214, 30);
 		contentPane.add(cboDeviceID);
 		
 		JLabel lblDeviceId = new JLabel("Device ID : ");
-		lblDeviceId.setBounds(12, 66, 67, 15);
+		lblDeviceId.setBounds(12, 79, 67, 15);
 		contentPane.add(lblDeviceId);
 		
 		JButton btnReadDevice = new JButton("ReadDevice");
@@ -443,11 +446,11 @@ public class Benchmark extends JFrame {
 				
 			}
 		});
-		btnReadDevice.setBounds(130, 126, 99, 30);
+		btnReadDevice.setBounds(130, 73, 99, 30);
 		contentPane.add(btnReadDevice);
 		
 		JScrollPane scrollPaneBench = new JScrollPane();
-		scrollPaneBench.setBounds(12, 172, 217, 280);
+		scrollPaneBench.setBounds(12, 217, 217, 244);
 		scrollPaneBench.getViewport().setBackground(Color.white);
 		contentPane.add(scrollPaneBench);
 		
@@ -455,6 +458,10 @@ public class Benchmark extends JFrame {
 		modelAdbCommand.addColumn("Seq");
 		modelAdbCommand.addColumn("Command");
 		modelAdbCommand.addColumn("Result");
+		
+		for(int i=0; i<args.length; i++) {
+			modelAdbCommand.addRow(new Object[] { String.valueOf(i+1), args[i], ""});
+		}
 		
 		tblAdbCommand = new JTable(modelAdbCommand){
             private static final long serialVersionUID = 1L;
@@ -514,41 +521,28 @@ public class Benchmark extends JFrame {
 		tblAdbCommand.getColumnModel().getColumn(1).setPreferredWidth(2000);
 		tblAdbCommand.getColumnModel().getColumn(2).setPreferredWidth(150);
 		
-		JButton btnBenchStart = new JButton("BenchStart");
+		JButton btnBenchStart = new JButton("Run");
 		btnBenchStart.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
 				benchStart();
 			}
 		});
-		btnBenchStart.setBounds(129, 672, 100, 30);
+		btnBenchStart.setBounds(12, 155, 67, 30);
 		contentPane.add(btnBenchStart);
 		
-		btnBenchAdd = new JButton("Add");
-		btnBenchAdd.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				BenchAdd benchAdd = new BenchAdd(Benchmark.this);
-				benchAdd.setLocation(getLocationX(), getLocationY());
-				benchAdd.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-				benchAdd.setVisible(true);
-			}
-		});
-		btnBenchAdd.setBounds(12, 672, 55, 30);
-		contentPane.add(btnBenchAdd);
-		
-		JButton btnAdbCommandClr = new JButton("Clr");
+		JButton btnAdbCommandClr = new JButton("Clear");
 		btnAdbCommandClr.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				modelAdbCommand.setRowCount(0);
 			}
 		});
-		btnAdbCommandClr.setBounds(66, 672, 55, 30);
+		btnAdbCommandClr.setBounds(161, 155, 67, 30);
 		contentPane.add(btnAdbCommandClr);
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
-		scrollPane_1.setBounds(12, 454, 217, 208);
+		scrollPane_1.setBounds(12, 484, 217, 218);
 		contentPane.add(scrollPane_1);
 		
 		txtBenchResult = new JTextArea();
@@ -562,15 +556,20 @@ public class Benchmark extends JFrame {
 				execWithFilter();
 			}
 		});
-		btnExecwithfilter.setBounds(1152, 144, 79, 30);
+		btnExecwithfilter.setBounds(1152, 110, 79, 30);
 		contentPane.add(btnExecwithfilter);
 		
 		// fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		// fc.setAcceptAllFileFilterUsed(false);
 		
-		JButton btnFind = new JButton("Find");
+		JButton btnFind = new JButton("Find ADB");
 		btnFind.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				String adbpath = txtAdbPath.getText();
+				if (adbpath != null || "".equals(adbpath)) {
+					fc.setCurrentDirectory(new File(adbpath));
+				}
+				
 				int returnVal = fc.showOpenDialog(Benchmark.this);
 				
 				File file;
@@ -583,11 +582,29 @@ public class Benchmark extends JFrame {
 			
 		        String fullname = file.getAbsolutePath();
 		        String filename = file.getName();
-		        txtAdbPath.setText(fullname.substring(0, fullname.length()-filename.length()));
+		        String adbPath = fullname.substring(0, fullname.length()-filename.length());
+		        txtAdbPath.setText(adbPath);
+		        
+		        Config.putAdbPath(adbPath);
 			}
 		});
 		btnFind.setBounds(130, 9, 97, 23);
 		contentPane.add(btnFind);
+		
+		JLabel lblNewLabel = new JLabel("Pass / Fail");
+		lblNewLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+		lblNewLabel.setBounds(12, 461, 203, 23);
+		contentPane.add(lblNewLabel);
+		
+		JLabel lblNewLabel_1 = new JLabel("ADB Commands");
+		lblNewLabel_1.setFont(new Font("Arial", Font.PLAIN, 12));
+		lblNewLabel_1.setBounds(12, 190, 217, 23);
+		contentPane.add(lblNewLabel_1);
+		
+		JLabel lblNewLabel_2 = new JLabel("Android Logs");
+		lblNewLabel_2.setFont(new Font("Arial", Font.PLAIN, 12));
+		lblNewLabel_2.setBounds(241, 190, 122, 20);
+		contentPane.add(lblNewLabel_2);
 	}
 
 	public int getLocationX()

@@ -11,6 +11,12 @@ public class IntentData{
 	private String componentCls;
 	private ArrayList<KeyTypePair> extra = new ArrayList<KeyTypePair>();
 	private Boolean flag;
+	
+	public static enum ComponentType { 
+			Activity, Service, BroadcastReceiver, ContentProvider 
+		};
+	
+	private ComponentType compType;
 
 	public void setAction(String action)
 	{
@@ -100,6 +106,21 @@ public class IntentData{
 		{
 			return componentPkg + "/" + componentCls;
 		}
+	}
+	
+	public void setComponentType(String comptypestr) {
+		if (comptypestr == null || "".equals(comptypestr))
+			return;
+		
+		for (ComponentType ct : ComponentType.values()) {
+			if ( ct.toString().equals(comptypestr) )
+				compType = ct;
+		}
+	}
+	
+	public String getComponentType() {
+		if (compType == null) return null;
+		else return compType.toString();
 	}
 
 	public void addExtra(KeyTypePair extra)
