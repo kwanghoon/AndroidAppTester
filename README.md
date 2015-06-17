@@ -1,14 +1,13 @@
-Copyright (C) Kwanghoon Choi 2015 Yonsei University
+Copyright(C) 2015 Kwanghoon Choi All Rights Reserved
 
 Android App Tester
 
-1) GenIntentSpecfromAPK : Automatic Generation of Intent Specs from APK
+1) GenTestsfromIntentSpec 
+   - Generation of Tests from Each Intent Spec
 
-2) GenTestsfromIntentSpec : Generation of Tests from Each Intent Spec
-
-3) UIforIntentSpec : UI for Intent Spec
-
-
-Contributed By Myung-Pil Ko, Sung-Bin Yoon, and Kwanghoon Choi.
+2) UIforIntentSpec 
+   - UI for Intent Spec
+   - Automatic Generation of Intent Specs from APK
 
 
+Contributed by Myung-Pil Ko and Sung-Bin Yoon.
