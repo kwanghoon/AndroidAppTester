@@ -159,7 +159,7 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 		btnOk.setBounds(764, 127, 99, 30);
 		contentPane.add(btnOk);
 		
-		JButton btnCancel = new JButton("Cancel");
+		JButton btnCancel = new JButton("Go Back");
 		btnCancel.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnCancel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -241,6 +241,7 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 		contentPane.add(cboMakeMode);
 		
 		txtCount = new JTextField();
+		txtCount.setText("3");
 		txtCount.setFont(new Font("Arial", Font.PLAIN, 12));
 		txtCount.setBounds(158, 33, 336, 28);
 		contentPane.add(txtCount);
@@ -374,6 +375,7 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 		testNo = "";
 		
 		textPackage = new JTextField();
+		textPackage.setText("com.example.android.test");
 		textPackage.setFont(new Font("Arial", Font.PLAIN, 12));
 		textPackage.addKeyListener(new KeyAdapter() {
 			@Override
@@ -422,6 +424,7 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 	}
 	
 	public void done_testArtifacts() {
+		System.out.println("done.");
 	}	
 	
 	public void appendTxt_intentSpec(String str)

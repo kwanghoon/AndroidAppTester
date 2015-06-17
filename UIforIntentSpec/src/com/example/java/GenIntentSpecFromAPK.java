@@ -138,14 +138,11 @@ public class GenIntentSpecFromAPK {
 			e.printStackTrace();
 		}
 		
+		ArrayList<IntentFilter> intentfilters = new ArrayList<IntentFilter>();
+				
 		if (requestType == Type.All || requestType == Type.Activity) {
-			for (int i = 0; i < intentfiltersforActivity.size(); i++) {
-	
-				System.out.println(intentfiltersforActivity.get(i));
-				if (i != intentfiltersforActivity.size() - 1) {
-					System.out.println(" || ");
-				}
-				count++;
+			for (IntentFilter i : intentfiltersforActivity) {
+				intentfilters.add(i);
 			}
 			
 			if (DEBUG) System.out.println("Activity");
@@ -153,32 +150,74 @@ public class GenIntentSpecFromAPK {
 		}
 		
 		if (requestType == Type.All || requestType == Type.Service) {
-			for (int i = 0; i < intentfiltersforService.size(); i++) {
-	
-				System.out.println(intentfiltersforService.get(i));
-				if (i != intentfiltersforService.size() - 1) {
-					System.out.println(" || ");
-				}
-				count++;
+			for (IntentFilter i : intentfiltersforService) {
+				intentfilters.add(i);
 			}
 			
 			if (DEBUG) System.out.println("Service");
 			if (DEBUG) System.out.println(intentfiltersforService.size());
 		}
-	
+		
 		if (requestType == Type.All || requestType == Type.BroadcastReceiver) {
-			for (int i = 0; i < intentfiltersforReceiver.size(); i++) {
-	
-				System.out.println(intentfiltersforReceiver.get(i));
-				if (i != intentfiltersforReceiver.size() - 1) {
-					System.out.println(" || ");
-				}
-				count++;
+			for (IntentFilter i : intentfiltersforReceiver) {
+				intentfilters.add(i);
 			}
 			
 			if (DEBUG) System.out.println("Receiver");
 			if (DEBUG) System.out.println(intentfiltersforReceiver.size());
 		}
+		
+		for (int i = 0; i < intentfilters.size(); i++) {
+			
+			System.out.println(intentfilters.get(i));
+			if (i != intentfilters.size() - 1) {
+				System.out.println(" || ");
+			}
+			count++;
+		}
+		
+		
+//		if (requestType == Type.All || requestType == Type.Activity) {
+//			for (int i = 0; i < intentfiltersforActivity.size(); i++) {
+//	
+//				System.out.println(intentfiltersforActivity.get(i));
+//				if (i != intentfiltersforActivity.size() - 1) {
+//					System.out.println(" || ");
+//				}
+//				count++;
+//			}
+//			
+//			if (DEBUG) System.out.println("Activity");
+//			if (DEBUG) System.out.println(intentfiltersforActivity.size());
+//		}
+//		
+//		if (requestType == Type.All || requestType == Type.Service) {
+//			for (int i = 0; i < intentfiltersforService.size(); i++) {
+//	
+//				System.out.println(intentfiltersforService.get(i));
+//				if (i != intentfiltersforService.size() - 1) {
+//					System.out.println(" || ");
+//				}
+//				count++;
+//			}
+//			
+//			if (DEBUG) System.out.println("Service");
+//			if (DEBUG) System.out.println(intentfiltersforService.size());
+//		}
+//	
+//		if (requestType == Type.All || requestType == Type.BroadcastReceiver) {
+//			for (int i = 0; i < intentfiltersforReceiver.size(); i++) {
+//	
+//				System.out.println(intentfiltersforReceiver.get(i));
+//				if (i != intentfiltersforReceiver.size() - 1) {
+//					System.out.println(" || ");
+//				}
+//				count++;
+//			}
+//			
+//			if (DEBUG) System.out.println("Receiver");
+//			if (DEBUG) System.out.println(intentfiltersforReceiver.size());
+//		}
 		
 		if (DEBUG) System.out.println("Total count = " +count);
 	}
@@ -211,7 +250,7 @@ public class GenIntentSpecFromAPK {
 		requestType = Type.All;
 		String apkfile;
 		
-		if (args.length == 1) {		
+		if (args.length >= 1) {		
 		
 			apkfile = "\"" + args[0] + "\"";	// ' ' in the file name
 			

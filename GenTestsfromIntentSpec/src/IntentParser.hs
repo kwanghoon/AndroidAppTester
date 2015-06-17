@@ -63,6 +63,8 @@ letter                        =  sat isAlpha
 
 alphanum                      :: Parser Char
 alphanum                      =  sat isAlphaNum
+                                 +++ do s <- sat (== '$')  --Added '$' as a alphabet symbol
+                                        return s
 
 char                          :: Char -> Parser Char
 char x                        =  sat (== x)
@@ -139,6 +141,8 @@ idOrNum =  token identAlpha
 alphanumOrDot :: Parser Char
 alphanumOrDot = do s <- sat isAlphaNum
                    return s
+                 +++ do s <- sat (== '$')               --Added '$' as a alphabet symbol
+                        return s
                  +++ do s <- sat (== '.')
                         return s
                  +++ do s <- sat (== '_')               --updated 2014/12/04

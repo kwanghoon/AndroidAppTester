@@ -182,6 +182,12 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 				
 				System.out.println("RUN: " + command);
 				
+				try {
+					Runtime.getRuntime().exec(command);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
 				ExecuteShellCommand.executeMakeTestArtifacts(BenchAdd.this, command);
 			}
 		});
@@ -216,7 +222,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		cboMakeMode.setBounds(12, 31, 134, 30);
 		contentPane.add(cboMakeMode);
 		
-		txtCount = new JTextField();
+		txtCount = new JTextField("3");
 		txtCount.setBounds(158, 33, 176, 28);
 		contentPane.add(txtCount);
 		txtCount.setColumns(10);
@@ -320,6 +326,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 	}
 	
 	public void done_testArtifacts() {
+		System.out.println("done.");
 	}
 	
 	public void appendTxt_intentSpec(String str)

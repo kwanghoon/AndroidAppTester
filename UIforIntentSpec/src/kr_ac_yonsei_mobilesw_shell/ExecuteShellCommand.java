@@ -1,6 +1,7 @@
 package kr_ac_yonsei_mobilesw_shell;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 
 import kr_ac_yonsei_mobilesw_UI.BenchAdd;
@@ -156,10 +157,32 @@ public class ExecuteShellCommand {
 				}
 				catch (Exception e)
 				{
+					ui.appendTxt_testArtifacts(e.getStackTrace().toString());
+				}
+				
+				try {
+					BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+					String line = "";
+					boolean flag = false;
+					
+					while ((line = reader.readLine())!= null) 
+					{						
+						if (flag == false) {
+							ui.appendTxt_testArtifacts("Error: \n");
+							flag = true;
+						}
+						if(line.equals("") == false)
+						{
+							ui.appendTxt_testArtifacts(line + "\n");
+						}
+					}
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
 				
 				p.destroy();
+				
+				ui.done_testArtifacts();
 			}
 		};
 		
@@ -196,6 +219,26 @@ public class ExecuteShellCommand {
 				}
 				catch (Exception e)
 				{
+					e.printStackTrace();
+				}
+				
+				try {
+					BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+					String line = "";
+					boolean flag = false;
+					
+					while ((line = reader.readLine())!= null) 
+					{
+						if (flag == false) {
+							ui.appendTxt_intentSpec("Error: \n");
+							flag = true;
+						}
+						if(line.equals("") == false)
+						{
+							ui.appendTxt_intentSpec(line + "\n");
+						}
+					}
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
 				
