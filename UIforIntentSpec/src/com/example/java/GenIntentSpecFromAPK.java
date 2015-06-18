@@ -44,6 +44,7 @@ public class GenIntentSpecFromAPK {
 			int parserEvent = parser.getEventType();
 			int action_count = 0;
 			int category_count = 0;
+			boolean componentwithoutintentfilter = true;
 
 			while (parserEvent != XmlPullParser.END_DOCUMENT) {
 				name = parser.getName();
@@ -58,6 +59,8 @@ public class GenIntentSpecFromAPK {
 						if (DEBUG) System.out.println("");
 					}
 					if ("activity".equals(name) || "receiver".equals(name) || "service".equals(name)) {
+						componentwithoutintentfilter = true;
+								
 						if ("activity".equals(name)) {
 							context = 1;
 							cmptype = "Activity ";
@@ -98,7 +101,9 @@ public class GenIntentSpecFromAPK {
 				case XmlPullParser.TEXT:
 					break;
 				case XmlPullParser.END_TAG:
-					if (name.equals("intent-filter")) {
+					if ("intent-filter".equals(name)) {
+						componentwithoutintentfilter = false;
+						
 						for (int i = 0; i < action_count; i++) { 
 							String t_category = "";
 							for (int m = 0; m < category_count; m++) { 
@@ -122,6 +127,25 @@ public class GenIntentSpecFromAPK {
 						}
 						action_count = 0;
 						category_count = 0;
+					}
+					
+					if ("activity".equals(name) || "receiver".equals(name) || "service".equals(name)) {
+						if (componentwithoutintentfilter == true) {
+							// Found a component declaration without any intent filters.
+							
+							String t_category = "";
+							String t_action  = "";
+							if (context == 1) {
+								IntentFilter filter = new IntentFilter(cmp, t_action, t_category);
+								intentfiltersforActivity.add(filter);
+							} else if (context == 2) {
+								IntentFilter filter = new IntentFilter(cmp, t_action, t_category);
+								intentfiltersforService.add(filter);
+							} else {
+								IntentFilter filter = new IntentFilter(cmp, t_action, t_category);
+								intentfiltersforReceiver.add(filter);
+							}
+						}
 					}
 					break;
 				case XmlPullParser.END_DOCUMENT:
