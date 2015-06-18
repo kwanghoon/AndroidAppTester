@@ -30,7 +30,7 @@ public class BenchStart {
 	WritableWorkbook workbook;
 	WritableSheet sheet;	
 	
-	boolean flagUseIntentAssertion = false; // IntentAssert 사용 여부
+	boolean flagUseIntentAssertion = false; // IntentAssert 
 	
 	public void start(Benchmark ui) 
 	{		

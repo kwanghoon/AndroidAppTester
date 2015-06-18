@@ -45,13 +45,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-/*
- *  TODO: 
- *  1. GenItentSpecFromAPK에서 service와 receiver에 대한 인텐트 스펙 생성이 잘되는지 확인 필요 
- *  2. ADB 명령어를 만들어 처음 테스트할 때 항상 중간에 멈추는 문제 발생
- *  3. ADB 명령어로 실행하는 중에 멈추는 기능 추가
- *  4. ADB 명령어를 실행하는 중에 멈추기 전까지 다른 버튼이 동작하지 않도록
- */
 public class Main extends JFrame implements InterfaceWithExecution {
 
 	private JPanel contentPane;
