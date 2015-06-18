@@ -15,4 +15,5 @@
 ./kr_ac_yonsei_mobilesw_UI/Config.java
 ./kr_ac_yonsei_mobilesw_UI/GenAndroidTestCodeUI.java
 ./kr_ac_yonsei_mobilesw_UI/InterfaceWithExecution.java
+./kr_ac_yonsei_mobilesw_UI/JavaCommand.java
 ./kr_ac_yonsei_mobilesw_UI/Main.java
