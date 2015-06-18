@@ -104,6 +104,8 @@ public class ParserOnIntent <T> {
 		return sp.failure();
 	}
 
+	private static Character dollar = new Character('$');
+	
 	public ArrayList<Tuple<Character>> alphanum(String inp)
 	{
 		ArrayList<Tuple<Character>> tuplelist;
@@ -111,7 +113,9 @@ public class ParserOnIntent <T> {
 		ParserOnIntent<Character> sp = new ParserOnIntent<Character>();
 
 		tuplelist = item(inp);
-		if(tuplelist.isEmpty() == false && Character.isLetterOrDigit(tuplelist.get(0).getValue()))
+		if(tuplelist.isEmpty() == false && 
+				(Character.isLetterOrDigit(tuplelist.get(0).getValue()) 
+						|| dollar.equals(tuplelist.get(0).getValue())))  // Added '$' as a alphabet symbol
 		{
 			return sp.pReturn(tuplelist.get(0).getValue(), tuplelist.get(0).getInp());
 		}
@@ -434,7 +438,9 @@ public class ParserOnIntent <T> {
 		ParserOnIntent<Character> sp = new ParserOnIntent<Character>();
 
 		cTuplelist = sp.item(inp);
-		if(cTuplelist.isEmpty() == false && Character.isLetterOrDigit(cTuplelist.get(0).getValue()) == true)
+		if(cTuplelist.isEmpty() == false && 
+				(Character.isLetterOrDigit(cTuplelist.get(0).getValue()) == true 
+						|| dollar.equals(cTuplelist.get(0).getValue()))) // Added '$' as a alphabet symbol
 		{
 			return sp.pReturn(cTuplelist.get(0).getValue(), cTuplelist.get(0).getInp());
 		}

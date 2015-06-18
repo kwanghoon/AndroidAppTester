@@ -258,7 +258,7 @@ public class GenIntentSpecFromAPK {
 				String currentWorkingDir = new File("").getAbsolutePath();
 				if (DEBUG) System.out.println("CWD: " + currentWorkingDir);
 				
-				String command = currentWorkingDir + "/../GenIntentSpecfromAPK/lib/" + apktool + " d -f " + apkfile;
+				String command = currentWorkingDir + "/tool/" + apktool + " d -f " + apkfile;
 				
 				if (DEBUG) System.out.println("CMD: " + command);
 				

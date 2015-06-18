@@ -136,9 +136,7 @@ public class Main extends JFrame implements InterfaceWithExecution {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
 				
-				String command = "java -cp " 
-							+ System.getProperty("user.dir") + "/bin;" 
-							+ System.getProperty("user.dir") + "/lib/* "
+				String command = JavaCommand.javaCmd() 
 							+ " kr_ac_yonsei_mobilesw_UI.GenAndroidTestCodeUI "; 
 				
 				
@@ -217,9 +215,7 @@ public class Main extends JFrame implements InterfaceWithExecution {
 		        
 		        Config.putImportPath(fc.getCurrentDirectory().getAbsolutePath());
 				
-				String command = "java -cp \"" 
-									+ System.getProperty("user.dir") + "/bin;" 
-									+ System.getProperty("user.dir") + "/lib/*\" " 
+				String command = JavaCommand.javaCmd() 
 									+ "com.example.java.GenIntentSpecFromAPK " 
 									+ "\"" + file.getAbsolutePath() + "\""; // ' ' in the file name
 				
@@ -250,9 +246,7 @@ public class Main extends JFrame implements InterfaceWithExecution {
 		btnMakeADBCmd.setFont(new Font("Arial", Font.PLAIN, 12));
 		btnMakeADBCmd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String command = "java -cp " 
-						+ System.getProperty("user.dir") + "/bin;" 
-						+ System.getProperty("user.dir") + "/lib/* "
+				String command = JavaCommand.javaCmd()
 						+ " kr_ac_yonsei_mobilesw_UI.BenchAdd "; 
 			
 			

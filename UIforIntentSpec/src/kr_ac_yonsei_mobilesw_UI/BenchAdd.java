@@ -281,9 +281,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		        
 		        Config.putImportPath(fc.getCurrentDirectory().getAbsolutePath());				
 				
-				String command = "java -cp \"" 
-									+ System.getProperty("user.dir") + "/bin;"
-									+ System.getProperty("user.dir") + "/lib/*\" " 
+				String command = JavaCommand.javaCmd() 
 									+ "com.example.java.GenIntentSpecFromAPK " 
 									+ "\"" + file.getAbsolutePath() + "\""; // ' ' in the file name
 				
