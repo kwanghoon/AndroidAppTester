@@ -565,7 +565,7 @@ public class ParserOnIntent <T> {
 
 		if(intentDataset.getIntent(intentKey) != null)
 		{
-			throw new MalformedIntentException("Intent Key is not unique. Key : " + intentKey, 1);
+			//throw new MalformedIntentException("Intent Key is not unique. Key : " + intentKey, 1);
 		}
 
 		intentDataset.addIntent(intentData);

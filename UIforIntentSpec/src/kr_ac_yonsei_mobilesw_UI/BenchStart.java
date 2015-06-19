@@ -59,144 +59,149 @@ public class BenchStart {
 				
 				for(int i = 0; i < ui.modelAdbCommand.getRowCount(); i++)
 				{
-					String adbCommand = ui.modelAdbCommand.getValueAt(i, 1).toString();
-					String packageName = adbCommand.substring(adbCommand.indexOf("-n ") + 3, adbCommand.indexOf('/', adbCommand.indexOf("-n ") + 3));
 					
-					ComponentMode mode;
-					
-					if(adbCommand.contains("shell am start"))
+					if(ui.benchStartProcessingFlag == true)
 					{
-						mode = ComponentMode.Activity;
-					}
-					else if(adbCommand.contains("shell am broadcast"))
-					{
-						mode = ComponentMode.BroadcastReceiver;
-					}
-					else				//else if(adbCommand.contains("shell am startservice"))
-					{
-						mode = ComponentMode.Service;
-					}
-					
-					ui.exec("adb shell am force-stop " + packageName);
-					try {
-						Thread.currentThread().sleep(2000);
-					} catch (InterruptedException e) {
+						String adbCommand = ui.modelAdbCommand.getValueAt(i, 1).toString();
+						String packageName = adbCommand.substring(adbCommand.indexOf("-n ") + 3, adbCommand.indexOf('/', adbCommand.indexOf("-n ") + 3));
 						
-					}
-					
-					ui.txtAdbCommand.setText(adbCommand);
-					ui.txtFilter.setText(packageName);
-					ui.txtAdbCommandLog.setText("");
-					
-					ui.LogcatClear();
-					ui.filterEvent();
-					ui.exec();
-					try {
-						Thread.currentThread().sleep(3000);
-					} catch (InterruptedException e) {
+						ComponentMode mode;
 						
-					}
-					
-					boolean normalCommand = false;
-					String[] spLine = ui.txtAdbCommandLog.getText().split("\n");
-					for(int k = 0; k < spLine.length; k++)
-					{
-						addRowinExcel(spLine[k]);
-						if(mode == ComponentMode.Activity)
+						if(adbCommand.contains("shell am start"))
 						{
-							if(spLine[k].contains("Starting: Intent"))
+							mode = ComponentMode.Activity;
+						}
+						else if(adbCommand.contains("shell am broadcast"))
+						{
+							mode = ComponentMode.BroadcastReceiver;
+						}
+						else				//else if(adbCommand.contains("shell am startservice"))
+						{
+							mode = ComponentMode.Service;
+						}
+						
+						ui.exec("adb shell am force-stop " + packageName);
+						try {
+							Thread.currentThread().sleep(2000);
+						} catch (InterruptedException e) {
+							
+						}
+						
+						ui.txtAdbCommand.setText(adbCommand);
+						ui.txtFilter.setText(packageName);
+						ui.txtAdbCommandLog.setText("");
+						
+						ui.LogcatClear();
+						ui.filterEvent();
+						ui.exec();
+						try {
+							Thread.currentThread().sleep(3000);
+						} catch (InterruptedException e) {
+							
+						}
+						
+						boolean normalCommand = false;
+						String[] spLine = ui.txtAdbCommandLog.getText().split("\n");
+						for(int k = 0; k < spLine.length; k++)
+						{
+							addRowinExcel(spLine[k]);
+							if(mode == ComponentMode.Activity)
 							{
-								normalCommand = true;
+								if(spLine[k].contains("Starting: Intent"))
+								{
+									normalCommand = true;
+								}
+							}
+							else if(mode == ComponentMode.BroadcastReceiver)
+							{
+								if(spLine[k].contains("Broadcasting: Intent"))
+								{
+									normalCommand = true;
+								}
+							}
+							else if(mode == ComponentMode.Service)
+							{
+								if(spLine[k].contains("Starting service: Intent"))
+								{
+									normalCommand = true;
+								}
 							}
 						}
-						else if(mode == ComponentMode.BroadcastReceiver)
+						
+						AnalyzeResult result = benchResult(ui, packageName, mode, normalCommand);
+						ui.modelAdbCommand.setValueAt(result, i, 2);
+						ui.modelAdbCommand.fireTableDataChanged();
+						
+						if(normalCommand == true)
 						{
-							if(spLine[k].contains("Broadcasting: Intent"))
+							if(result == AnalyzeResult.Normal)
 							{
-								normalCommand = true;
+								Normal++;
+							}
+							else if(result == AnalyzeResult.Exit)
+							{
+								Exit++;
+							}
+							else if(result == AnalyzeResult.ErrorExit)
+							{
+								ErrorExit++;
+							}
+							else if(result == AnalyzeResult.IntentSpecCatchAndNormal)
+							{
+								IntentSpecCatchAndNormal++;
+							}
+							else if(result == AnalyzeResult.IntentSpecCatchAndExit)
+							{
+								IntentSpecCatchAndExit++;
+							}
+							else if(result == AnalyzeResult.IntentSpecCatchAndErrorExit)
+							{
+								IntentSpecCatchAndErrorExit++;
+							}
+							else if(result == AnalyzeResult.IntentSpecPassAndNormal)
+							{
+								IntentSpecPassAndNormal++;
+							}
+							else if(result == AnalyzeResult.IntentSpecPassAndExit)
+							{
+								IntentSpecPassAndExit++;
+							}
+							else if(result == AnalyzeResult.IntentSpecPassAndErrorExit)
+							{
+								IntentSpecPassAndErrorExit++;
 							}
 						}
-						else if(mode == ComponentMode.Service)
+						else
 						{
-							if(spLine[k].contains("Starting service: Intent"))
-							{
-								normalCommand = true;
-							}
+							CantAnalyze++;
 						}
+					
+						int resultCount = Normal + Exit + ErrorExit + 
+								+ IntentSpecCatchAndNormal +  IntentSpecCatchAndExit + IntentSpecCatchAndErrorExit
+								+ IntentSpecPassAndNormal + IntentSpecPassAndExit + IntentSpecPassAndErrorExit + CantAnalyze;
+						
+						ui.txtBenchResult.setText("Pass\t: " + (Normal+Exit)
+								// + "\nPass\t\t: " + Exit 
+								+ "\nFail\t: " + ErrorExit
+								
+								+ (flagUseIntentAssertion ?
+										
+								  "\nAssert/F=>Pass\t: " + IntentSpecCatchAndNormal
+								+ "\nAssert/F=>Pass\t: " + IntentSpecCatchAndExit
+								+ "\nAssert/F=>Fail\t: " + IntentSpecCatchAndErrorExit
+								+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndNormal 
+								+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndExit 
+								+ "\nAssert/T=>Fail\t: " + IntentSpecPassAndErrorExit
+								
+								: "")
+								
+								+ "\nProgress\t: " + (int)(((double)resultCount / ui.modelAdbCommand.getRowCount()) * 100) + "% (" + (resultCount + "/" + ui.modelAdbCommand.getRowCount() + ")")
+								+ "\nAnalysis Failure : " + CantAnalyze );
+						
+						addRowinExcel("result : " + result.toString());
+						addRowinExcel("------------------------------------------------------------");
+					
 					}
-					
-					AnalyzeResult result = benchResult(ui, packageName, mode, normalCommand);
-					ui.modelAdbCommand.setValueAt(result, i, 2);
-					ui.modelAdbCommand.fireTableDataChanged();
-					
-					if(normalCommand == true)
-					{
-						if(result == AnalyzeResult.Normal)
-						{
-							Normal++;
-						}
-						else if(result == AnalyzeResult.Exit)
-						{
-							Exit++;
-						}
-						else if(result == AnalyzeResult.ErrorExit)
-						{
-							ErrorExit++;
-						}
-						else if(result == AnalyzeResult.IntentSpecCatchAndNormal)
-						{
-							IntentSpecCatchAndNormal++;
-						}
-						else if(result == AnalyzeResult.IntentSpecCatchAndExit)
-						{
-							IntentSpecCatchAndExit++;
-						}
-						else if(result == AnalyzeResult.IntentSpecCatchAndErrorExit)
-						{
-							IntentSpecCatchAndErrorExit++;
-						}
-						else if(result == AnalyzeResult.IntentSpecPassAndNormal)
-						{
-							IntentSpecPassAndNormal++;
-						}
-						else if(result == AnalyzeResult.IntentSpecPassAndExit)
-						{
-							IntentSpecPassAndExit++;
-						}
-						else if(result == AnalyzeResult.IntentSpecPassAndErrorExit)
-						{
-							IntentSpecPassAndErrorExit++;
-						}
-					}
-					else
-					{
-						CantAnalyze++;
-					}
-				
-					int resultCount = Normal + Exit + ErrorExit + 
-							+ IntentSpecCatchAndNormal +  IntentSpecCatchAndExit + IntentSpecCatchAndErrorExit
-							+ IntentSpecPassAndNormal + IntentSpecPassAndExit + IntentSpecPassAndErrorExit + CantAnalyze;
-					
-					ui.txtBenchResult.setText("Pass\t: " + (Normal+Exit)
-							// + "\nPass\t\t: " + Exit 
-							+ "\nFail\t: " + ErrorExit
-							
-							+ (flagUseIntentAssertion ?
-									
-							  "\nAssert/F=>Pass\t: " + IntentSpecCatchAndNormal
-							+ "\nAssert/F=>Pass\t: " + IntentSpecCatchAndExit
-							+ "\nAssert/F=>Fail\t: " + IntentSpecCatchAndErrorExit
-							+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndNormal 
-							+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndExit 
-							+ "\nAssert/T=>Fail\t: " + IntentSpecPassAndErrorExit
-							
-							: "")
-							
-							+ "\nProgress\t: " + (int)(((double)resultCount / ui.modelAdbCommand.getRowCount()) * 100) + "% (" + (resultCount + "/" + ui.modelAdbCommand.getRowCount() + ")")
-							+ "\nAnalysis Failure\t: " + CantAnalyze );
-					
-					addRowinExcel("result : " + result.toString());
-					addRowinExcel("------------------------------------------------------------");
 				}
 				
 				String resultAll = "Pass\t: " + (Normal + Exit)
@@ -213,7 +218,7 @@ public class BenchStart {
 						
 						: "")
 						
-						+ "\nAnalysis Failure\t: " + CantAnalyze
+						+ "\nAnalysis Failure : " + CantAnalyze
 						+ "\nResult Count\t\t: " + (Normal + Exit + ErrorExit 
 								+ IntentSpecCatchAndNormal + IntentSpecCatchAndExit + IntentSpecCatchAndErrorExit 
 								+ IntentSpecPassAndNormal + IntentSpecPassAndExit + IntentSpecPassAndErrorExit + CantAnalyze);
@@ -231,6 +236,8 @@ public class BenchStart {
 				} catch (WriteException | IOException e) {
 					e.printStackTrace();
 				}
+				
+				ui.benchmarkRunButtonFix();
 			}
 		};
 		

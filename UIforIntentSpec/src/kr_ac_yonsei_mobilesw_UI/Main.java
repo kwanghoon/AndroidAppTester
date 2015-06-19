@@ -105,7 +105,7 @@ public class Main extends JFrame implements InterfaceWithExecution {
 	 * Create the frame.
 	 */
 	public Main(Benchmark mUI) {
-		addFileHandler(logger);
+		//addFileHandler(logger);
 		
 		setTitle("Android Testing Framework for The Vulnerability of Android Components");
 		
@@ -216,6 +216,9 @@ public class Main extends JFrame implements InterfaceWithExecution {
 				
 				btnImportFromApk.setText(labelBtnImporting);
 				ExecuteShellCommand.executeImportIntentSpecCommand(Main.this, command);
+				
+				
+				
 				//com.example.java.GenIntentSpecFromAPK.main(new String[] { 
 				//		compTypeOption, 
 				//		file.getAbsolutePath()
@@ -321,7 +324,7 @@ public class Main extends JFrame implements InterfaceWithExecution {
 		btnImportFromApk.setText(labelBtnImport);
 	}
 	
-	
+	/*
     private void addFileHandler(Logger logger) {
         try {
             fileHandler = new FileHandler(Benchmark.class.getName() + ".log");
@@ -332,6 +335,7 @@ public class Main extends JFrame implements InterfaceWithExecution {
         }
         logger.addHandler(fileHandler);
     }
+    */
     
     private class APKOrAndroidManifestFilter extends FileFilter {
     	 

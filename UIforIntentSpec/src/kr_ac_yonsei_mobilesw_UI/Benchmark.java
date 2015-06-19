@@ -93,6 +93,10 @@ public class Benchmark extends JFrame {
 	private JTable tblAdbCommand;
 	JTextArea txtBenchResult;
 	private JButton btnExecwithfilter;
+	public boolean benchStartProcessingFlag = false;
+	public boolean benchStartProcessingDoneFlag = false;
+	public boolean showLogCatProcessingFlag = false;  
+	public JButton btnBenchStart = null;
 	
 	private JFileChooser fc = new JFileChooser();
 	
@@ -146,7 +150,7 @@ public class Benchmark extends JFrame {
 	 * Create the frame.
 	 */
 	public Benchmark(String[] args) {
-		addFileHandler(logger);
+		//addFileHandler(logger);
 		
 		setTitle("ADB Command");
 		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -160,31 +164,36 @@ public class Benchmark extends JFrame {
 		btnViewlogcat.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				String command = "adb -s 5888e6a4 logcat -v threadtime *:V";		//Don't have command
-				
-				if(cboDeviceID.getSelectedItem() == null)
+				if(showLogCatProcessingFlag == false)
 				{
-					command = "adb logcat -v threadtime *:V";
-				}
-				else
-				{
-					String deviceID = cboDeviceID.getSelectedItem().toString().substring(cboDeviceID.getSelectedItem().toString().indexOf(":") + 1, cboDeviceID.getSelectedItem().toString().length());
-					command = "adb -s " + deviceID + " logcat -v threadtime *:V";
+					String command = "adb -s 5888e6a4 logcat -v threadtime *:V";		//Don't have command
 					
-					logger.info("btnViewlogcat => DevicesID : " + deviceID + ", command : " + command);
+					if(cboDeviceID.getSelectedItem() == null)
+					{
+						command = "adb logcat -v threadtime *:V";
+					}
+					else
+					{
+						String deviceID = cboDeviceID.getSelectedItem().toString().substring(cboDeviceID.getSelectedItem().toString().indexOf(":") + 1, cboDeviceID.getSelectedItem().toString().length());
+						command = "adb -s " + deviceID + " logcat -v threadtime *:V";
+						
+						logger.info("btnViewlogcat => DevicesID : " + deviceID + ", command : " + command);
+					}
+					
+					if(txtAdbPath.getText().trim().equals(""))
+					{
+						command = adbPathString + command;
+					}
+					else
+					{
+						command = txtAdbPath.getText().trim() + command;
+					}
+					
+					ExecuteShellCommand.showLogcat(Benchmark.this, command);
+					
+					showLogCatProcessingFlag = true;
+					btnViewlogcat.setText("Showing...");
 				}
-				
-				
-				if(txtAdbPath.getText().trim().equals(""))
-				{
-					command = adbPathString + command;
-				}
-				else
-				{
-					command = txtAdbPath.getText().trim() + command;
-				}
-				
-				ExecuteShellCommand.showLogcat(Benchmark.this, command);
 			}
 		});
 		btnViewlogcat.setBounds(1018, 155, 99, 30);
@@ -250,29 +259,32 @@ public class Benchmark extends JFrame {
                 Component comp = super.prepareRenderer(renderer, row, column);
                 JComponent jc = (JComponent) comp;
                 
-                if(getModel().getValueAt(row, 0).toString().equals("V"))
+                if (getModel().getValueAt(row, 0) != null) 
                 {
-                	comp.setForeground(Color.black);
-                }	
-                else if(getModel().getValueAt(row, 0).toString().equals("D"))
-                {
-                	comp.setForeground(new Color(0, 0, 127));
-                }
-                else if(getModel().getValueAt(row, 0).toString().equals("I"))
-                {
-                	comp.setForeground(new Color(0, 127, 0));
-                }
-                else if(getModel().getValueAt(row, 0).toString().equals("W"))
-                {
-                	comp.setForeground(new Color(255, 127, 0));
-                }
-                else if(getModel().getValueAt(row, 0).toString().equals("E"))
-                {
-                	comp.setForeground(new Color(255, 0, 0));
-                }
-                else
-                {
-                	comp.setForeground(Color.black);
+	                if(getModel().getValueAt(row, 0).toString().equals("V"))
+	                {
+	                	comp.setForeground(Color.black);
+	                }	
+	                else if(getModel().getValueAt(row, 0).toString().equals("D"))
+	                {
+	                	comp.setForeground(new Color(0, 0, 127));
+	                }
+	                else if(getModel().getValueAt(row, 0).toString().equals("I"))
+	                {
+	                	comp.setForeground(new Color(0, 127, 0));
+	                }
+	                else if(getModel().getValueAt(row, 0).toString().equals("W"))
+	                {
+	                	comp.setForeground(new Color(255, 127, 0));
+	                }
+	                else if(getModel().getValueAt(row, 0).toString().equals("E"))
+	                {
+	                	comp.setForeground(new Color(255, 0, 0));
+	                }
+	                else
+	                {
+	                	comp.setForeground(Color.black);
+	                }
                 }
                 return comp;
             }
@@ -521,11 +533,34 @@ public class Benchmark extends JFrame {
 		tblAdbCommand.getColumnModel().getColumn(1).setPreferredWidth(2000);
 		tblAdbCommand.getColumnModel().getColumn(2).setPreferredWidth(150);
 		
-		JButton btnBenchStart = new JButton("Run");
+		btnBenchStart = new JButton("Run");
+		btnBenchStart.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			}
+		});
 		btnBenchStart.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent arg0) {
-				benchStart();
+				if(benchStartProcessingFlag == false)
+				{
+					if(benchStartProcessingDoneFlag == false)
+					{
+						btnBenchStart.setText("Stop");
+						benchStartProcessingFlag = true;
+						benchStartProcessingDoneFlag = true;
+						benchStart();
+					}
+				}
+				else
+				{
+					if(benchStartProcessingDoneFlag == true)
+					{
+						btnBenchStart.setText("Stop...");
+						benchStartProcessingFlag = false;
+					}
+				}
+					
+				
 			}
 		});
 		btnBenchStart.setBounds(12, 155, 67, 30);
@@ -634,12 +669,15 @@ public class Benchmark extends JFrame {
 		
 		LogcatLock.lock();
 		
-		modelLogcat.addRow(newRow);
-		
-		if(modelLogcat.getRowCount() > logcatMaximumCount)
+		if(newRow != null)
 		{
-			modelLogcat.removeRow(0);
-			logcatReadStartIndex--;
+			modelLogcat.addRow(newRow);
+			
+			if(modelLogcat.getRowCount() > logcatMaximumCount)
+			{
+				modelLogcat.removeRow(0);
+				logcatReadStartIndex--;
+			}
 		}
 		
 		//logger.info("modelLogcat => modelLogcat.getRowCount() : " + modelLogcat.getRowCount() + ", logcatMaximumCount : " + logcatMaximumCount + ", logcatReadStartIndex : " + logcatReadStartIndex);
@@ -677,33 +715,36 @@ public class Benchmark extends JFrame {
 				}
 			}
 			
-			String level = str.substring(31, 32);
-			String time = str.substring(0, 18);
-			String pid = str.substring(19, 24).trim();
-			String tid = str.substring(25, 30).trim();
-			int endOfTag = str.indexOf(':', 33);
-			String tag = str.substring(33, endOfTag);
-			String text = str.substring(endOfTag + 2, str.length());
-			
-			String ApplicationName = mapPidToApplicationName.get(pid);
-			if(ApplicationName != null)
+			if(str.length() > 33)
 			{
-				str = str + " id:" + ApplicationName + " ";
-			}
-			int startOfId = str.indexOf(" id:");
-			String application = "";
-			if(startOfId != -1)
-			{
-				int endOfId = str.indexOf(' ', startOfId + 5);
-				if(endOfId == -1)
+				String level = str.substring(31, 32);
+				String time = str.substring(0, 18);
+				String pid = str.substring(19, 24).trim();
+				String tid = str.substring(25, 30).trim();
+				int endOfTag = str.indexOf(':', 33);
+				String tag = str.substring(33, endOfTag);
+				String text = str.substring(endOfTag + 2, str.length());
+				
+				String ApplicationName = mapPidToApplicationName.get(pid);
+				if(ApplicationName != null)
 				{
-					endOfId = str.length();
+					str = str + " id:" + ApplicationName + " ";
 				}
-				//logger.info("btnViewlogcat => parseLog - endOfId : " + endOfId);
-				application = str.substring(startOfId + 4, endOfId).trim();
+				int startOfId = str.indexOf(" id:");
+				String application = "";
+				if(startOfId != -1)
+				{
+					int endOfId = str.indexOf(' ', startOfId + 5);
+					if(endOfId == -1)
+					{
+						endOfId = str.length();
+					}
+					//logger.info("btnViewlogcat => parseLog - endOfId : " + endOfId);
+					application = str.substring(startOfId + 4, endOfId).trim();
+				}
+				
+				row = new Object[]{level, time, pid, tid, application, tag, text, str};
 			}
-			
-			row = new Object[]{level, time, pid, tid, application, tag, text, str};
 		}
 		catch (Exception e)
 		{
@@ -876,6 +917,7 @@ public class Benchmark extends JFrame {
 		modelLogcatView.addRow(newRow);
 	}
 	
+	/*
     private void addFileHandler(Logger logger) {
         try {
             fileHandler = new FileHandler(Benchmark.class.getName() + ".log");
@@ -886,6 +928,7 @@ public class Benchmark extends JFrame {
         }
         logger.addHandler(fileHandler);
     }
+    */
     
     public void showDeviceList(String deviceText)
     {
@@ -915,6 +958,13 @@ public class Benchmark extends JFrame {
     	logcatReadStartIndex = 0;
     	
     	LogcatLock.unlock();
+    }
+    
+    public void benchmarkRunButtonFix()
+    {
+    	benchStartProcessingDoneFlag = false;
+
+    	btnBenchStart.setText("Run");
     }
     
     public void filterEvent()

@@ -100,7 +100,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 	 * Create the frame.
 	 */
 	public BenchAdd(Benchmark mUI, String[] args) {
-		addFileHandler(logger);
+		//addFileHandler(logger);
 		
 		setTitle("Adb Command Generation");
 		
@@ -578,6 +578,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		return row;
 	}
 	
+	/*
     private void addFileHandler(Logger logger) {
         try {
             fileHandler = new FileHandler(Benchmark.class.getName() + ".log");
@@ -588,6 +589,7 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
         }
         logger.addHandler(fileHandler);
     }
+    */
     
     private class APKOrAndroidManifestFilter extends FileFilter {
     	 

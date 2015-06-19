@@ -115,7 +115,7 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 	 * Create the frame.
 	 */
 	public GenAndroidTestCodeUI(Benchmark mUI, String[] args) {
-		addFileHandler(logger);
+		//addFileHandler(logger);
 		
 		setTitle("Android Test Code");
 		
@@ -673,6 +673,7 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 		return row;
 	}
 	
+	/*
     private void addFileHandler(Logger logger) {
         try {
             fileHandler = new FileHandler(Benchmark.class.getName() + ".log");
@@ -683,6 +684,7 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
         }
         logger.addHandler(fileHandler);
     }
+    */
     
     public static void saveAndroidTestCode(String pkg, String outdir, String testcode, JFrame jframe, boolean overwrite) {
     	
