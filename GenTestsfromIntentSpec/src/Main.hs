@@ -164,6 +164,8 @@ alphanumOrDot = do s <- sat isAlphaNum
                         return s
                  +++ do s <- sat (== '.')
                         return s
+                 +++ do s <- sat (== '$')
+                        return s
 
 identOrDot :: Parser String
 identOrDot = do x  <- letter

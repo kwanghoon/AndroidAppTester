@@ -124,7 +124,14 @@ public class Benchmark extends JFrame {
 
 	/**
 	 * Launch the application.
+	 * 
+	 * 
+	 * args : [ -EXIT_ON_CLOSE ]  : An option to turn on EXIT_ON_CLOSE
+	 *        adb shell ...
+	 *        adb shell ...
+	 *        ...
 	 */
+	
 	public static void main(String[] args) {
 
 		try {
@@ -151,6 +158,16 @@ public class Benchmark extends JFrame {
 	 */
 	public Benchmark(String[] args) {
 		//addFileHandler(logger);
+		
+		if (args.length >= 1 && "-EXIT_ON_CLOSE".equals(args[0])) {
+			String[] new_args = new String[args.length-1];
+			for (int i=0; i<args.length-1; i++) {
+				new_args[i] = args[i+1];
+			}
+			
+			args = new_args;
+			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		}
 		
 		setTitle("ADB Command");
 		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
