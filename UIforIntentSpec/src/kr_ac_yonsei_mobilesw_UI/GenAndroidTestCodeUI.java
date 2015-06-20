@@ -421,8 +421,8 @@ public class GenAndroidTestCodeUI extends JFrame implements InterfaceWithExecuti
 		txtAdbCommand.setCaretPosition(txtAdbCommand.getCaretPosition() + str.length());
 	}
 	
-	public void done_testArtifacts() {
-		System.out.println("done.");
+	public void done_testArtifacts(boolean fail) {
+		System.out.println("done. " + fail);
 	}	
 	
 	public void appendTxt_intentSpec(String str)

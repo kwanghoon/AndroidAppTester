@@ -9,6 +9,23 @@ import kr_ac_yonsei_mobilesw_UI.Benchmark;
 import kr_ac_yonsei_mobilesw_UI.InterfaceWithExecution;
 
 public class ExecuteShellCommand {
+	private static String osNameStr="windows";
+	
+	static {
+		String osName = System.getProperty("os.name");
+		String osNameMatch = osName.toLowerCase();
+		
+		if(osNameMatch.contains("linux")) {
+			osNameStr = "linux";
+		} else if(osNameMatch.contains("windows")) {
+			osNameStr = "windows";
+		} else if(osNameMatch.contains("mac os") || osNameMatch.contains("macos") || osNameMatch.contains("darwin")) {
+			osNameStr = "mac";
+		}else {
+			osNameStr = "windows"; // Windows OS by default
+		}	
+	}
+	
 	public static void executeCommand(Benchmark ui, String command) 
 	{		
 		Thread worker = new Thread()
@@ -135,8 +152,13 @@ public class ExecuteShellCommand {
 			public void run()
 			{
 				Process p = null;
-				try {					
-					p = Runtime.getRuntime().exec(command);
+				try {				
+					if ("mac".equals(osNameStr)) {
+						p = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", command });
+					}
+					else {
+						p = Runtime.getRuntime().exec(command);
+					}
 					
 					//ui.appendTxt_adbCommand("> " + command);
 					
@@ -153,36 +175,45 @@ public class ExecuteShellCommand {
 								ui.appendTxt_testArtifacts(line + "\n");
 							}
 						}
+						
+						reader.close();
 					}
+				
+				
+					boolean flag = false;
+					
+					try {
+						BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+						String line = "";
+						
+						
+						while ((line = reader.readLine())!= null) 
+						{						
+							if (flag == false) {
+								ui.appendTxt_testArtifacts("Error: \n");
+								flag = true;
+							}
+							if(line.equals("") == false)
+							{
+								ui.appendTxt_testArtifacts(line + "\n");
+							}
+						}
+						
+						reader.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					} 
+					
+					p.destroy();
+					
+					ui.done_testArtifacts(flag);
+				
 				}
 				catch (Exception e)
 				{
-					ui.appendTxt_testArtifacts(e.getStackTrace().toString());
-				}
-				
-				try {
-					BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-					String line = "";
-					boolean flag = false;
-					
-					while ((line = reader.readLine())!= null) 
-					{						
-						if (flag == false) {
-							ui.appendTxt_testArtifacts("Error: \n");
-							flag = true;
-						}
-						if(line.equals("") == false)
-						{
-							ui.appendTxt_testArtifacts(line + "\n");
-						}
-					}
-				} catch (IOException e) {
 					e.printStackTrace();
+					ui.appendTxt_testArtifacts(e.getMessage());
 				}
-				
-				p.destroy();
-				
-				ui.done_testArtifacts();
 			}
 		};
 		
@@ -197,7 +228,12 @@ public class ExecuteShellCommand {
 			{
 				Process p = null;
 				try {					
-					p = Runtime.getRuntime().exec(command);
+					if ("mac".equals(osNameStr)) {
+						p = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", command });
+					}
+					else {
+						p = Runtime.getRuntime().exec(command);
+					}
 					
 					//ui.appendTxt_adbCommand("> " + command);
 					
@@ -213,36 +249,42 @@ public class ExecuteShellCommand {
 								ui.appendTxt_intentSpec(line + "\n");
 							}
 						}
+						
+						reader.close();
 					}
 					
 					ui.done_intentSpec();
+					
+					try {
+						BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+						String line = "";
+						boolean flag = false;
+						
+						while ((line = reader.readLine())!= null) 
+						{
+							if (flag == false) {
+								ui.appendTxt_intentSpec("Error: \n");
+								flag = true;
+							}
+							if(line.equals("") == false)
+							{
+								ui.appendTxt_intentSpec(line + "\n");
+							}
+						}
+						
+						reader.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					
+					p.destroy();
 				}
 				catch (Exception e)
 				{
 					e.printStackTrace();
 				}
 				
-				try {
-					BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-					String line = "";
-					boolean flag = false;
-					
-					while ((line = reader.readLine())!= null) 
-					{
-						if (flag == false) {
-							ui.appendTxt_intentSpec("Error: \n");
-							flag = true;
-						}
-						if(line.equals("") == false)
-						{
-							ui.appendTxt_intentSpec(line + "\n");
-						}
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 				
-				p.destroy();
 			}
 		};
 		

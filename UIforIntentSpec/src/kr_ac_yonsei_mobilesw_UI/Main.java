@@ -311,7 +311,7 @@ public class Main extends JFrame implements InterfaceWithExecution {
 		System.out.println(str);
 	}
 	
-	public void done_testArtifacts() {
+	public void done_testArtifacts(boolean fail) {
 	}	
 	
 	public void appendTxt_intentSpec(String str)

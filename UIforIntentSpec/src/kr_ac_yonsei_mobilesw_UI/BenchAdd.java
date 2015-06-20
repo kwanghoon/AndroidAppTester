@@ -44,7 +44,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 public class BenchAdd extends JFrame implements InterfaceWithExecution {
-
 	private JPanel contentPane;
 	private static Benchmark benchmarkUI;
 	private JTextArea txtAdbCommand;
@@ -182,11 +181,12 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 				
 				System.out.println("RUN: " + command);
 				
-				try {
-					Runtime.getRuntime().exec(command);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				
+//				try {
+//					Runtime.getRuntime().exec(command);
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
 				
 				ExecuteShellCommand.executeMakeTestArtifacts(BenchAdd.this, command);
 			}
@@ -323,8 +323,8 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 		txtAdbCommand.setCaretPosition(txtAdbCommand.getCaretPosition() + str.length());
 	}
 	
-	public void done_testArtifacts() {
-		System.out.println("done.");
+	public void done_testArtifacts(boolean fail) {
+		System.out.println("done. " + fail);
 	}
 	
 	public void appendTxt_intentSpec(String str)

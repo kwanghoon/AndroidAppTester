@@ -14,6 +14,23 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 public class GenIntentSpecFromAPK {
+	private static String osNameStr="windows";
+	
+	static {
+		String osName = System.getProperty("os.name");
+		String osNameMatch = osName.toLowerCase();
+		
+		if(osNameMatch.contains("linux")) {
+			osNameStr = "linux";
+		} else if(osNameMatch.contains("windows")) {
+			osNameStr = "windows";
+		} else if(osNameMatch.contains("mac os") || osNameMatch.contains("macos") || osNameMatch.contains("darwin")) {
+			osNameStr = "mac";
+		}else {
+			osNameStr = "windows"; // Windows OS by default
+		}	
+	}
+	
 	private static enum Type { All, Activity, Service, BroadcastReceiver };
 	
 	private static Type requestType;
@@ -310,8 +327,14 @@ public class GenIntentSpecFromAPK {
 					
 					if (DEBUG) System.out.println("XML: " + xmlfile);
 					
+					Process p;
 					
-					Process p = Runtime.getRuntime().exec(command);
+					if ("mac".equals(osNameStr)) {
+						p = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", command });
+					}
+					else {
+						p = Runtime.getRuntime().exec(command);
+					}
 					
 					while (p.isAlive()) {
 						BufferedReader reader = 

@@ -755,13 +755,27 @@ make artifactType randomType count intentSpecS args
 
 main :: IO ()
 main = do hSetEncoding stdout utf8
-          args <- getArgs
+          args_0 <- getArgs
+	  let artifact_type = args_0 !! 0
+	  let random_type = castInt 1  args_0
+	  let count = castInt 2 args_0
+	  (spec, args) <- readIntentSpec (drop 3 args_0)
           -- artifact type, random type, count, intent spec,
-          make  (args !! 0) (castInt 1 args) (castInt 2 args) (args !! 3) (drop 4 args)
+          -- putStrLn spec
+	  -- mapM_ putStrLn args
+          make  artifact_type random_type count spec args
 
 castInt :: Int -> [String] -> Int
 castInt 0 (arg:args) = read arg :: Int
 castInt n (arg:args) = castInt (n-1) args
+
+readIntentSpec :: [String] -> IO (String, [String])
+readIntentSpec args = 
+  do if length args >= 2 && args !! 0 == "-f"
+       then do txt <- readFile (args !! 1)
+               return (txt, drop 2 args)
+       else return (head args, tail args)
+
 
 
 -- >ghc --make Main.hs
