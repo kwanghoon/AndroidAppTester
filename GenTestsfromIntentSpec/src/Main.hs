@@ -8,6 +8,7 @@ import Data.List
 import System.Random
 import System.IO
 import System.IO.Unsafe
+import System.Directory
 import System.Environment
 
 import ActionElements
@@ -755,28 +756,46 @@ make artifactType randomType count intentSpecS args
                         (randomOnly count (eval intentSpecS)) 
         in  makeTestArtifact artifactType intentSpecS intents args
 
+{-
+  Arguments:
+
+   1) AdbCommand 0 3 "{cmp=com.example.android/.Main}"
+   2) AdbCommand 0 3 -f myspec.is
+   3) AdbCommand 0 3 -ftmp myspec.is
+        (The file is deleted after it is processed.)
+
+   4) AndroidTestCode 0 3 "{cmp=com.example.android/.Main}" com.example.android.test
+   5) AndroidTestCode 0 3 -f myspec.is com.example.android.test
+   6) AndroidTestCode 0 3 -ftmp myspec.is  com.example.android.test
+        (The file is deleted after it is processed.)
+
+-}
+
 main :: IO ()
 main = do hSetEncoding stdout utf8
           args_0 <- getArgs
 	  let artifact_type = args_0 !! 0
 	  let random_type = castInt 1  args_0
 	  let count = castInt 2 args_0
-	  (spec, args) <- readIntentSpec (drop 3 args_0)
+	  (spec, args, keep, thefile) <- readIntentSpec (drop 3 args_0)
           -- artifact type, random type, count, intent spec,
           -- putStrLn spec
 	  -- mapM_ putStrLn args
           make  artifact_type random_type count spec args
+          if keep then return ()  
+	  else do fileExists <- doesFileExist thefile
+	          when fileExists (removeFile thefile)
 
 castInt :: Int -> [String] -> Int
 castInt 0 (arg:args) = read arg :: Int
 castInt n (arg:args) = castInt (n-1) args
 
-readIntentSpec :: [String] -> IO (String, [String])
+readIntentSpec :: [String] -> IO (String, [String], Bool, String ) -- True : -f, False : -ftmp
 readIntentSpec args = 
-  do if length args >= 2 && args !! 0 == "-f"
+  do if length args >= 2 && (args !! 0 == "-f" || args !! 0 == "-ftmp")
        then do txt <- readFile (args !! 1)
-               return (txt, drop 2 args)
-       else return (head args, tail args)
+               return (txt, drop 2 args, args !! 0 == "-f", args !! 1)
+       else return (head args, tail args, True, "")
 
 
 

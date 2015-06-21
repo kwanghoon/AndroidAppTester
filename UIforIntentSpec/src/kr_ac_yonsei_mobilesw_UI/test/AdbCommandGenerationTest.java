@@ -11,6 +11,7 @@ import java.io.StringReader;
 import java.util.Scanner;
 
 import kr_ac_yonsei_mobilesw_UI.InterfaceWithExecution;
+import kr_ac_yonsei_mobilesw_UI.JavaCommand;
 import kr_ac_yonsei_mobilesw_parser.MalformedIntentException;
 import kr_ac_yonsei_mobilesw_parser.ParserOnIntent;
 import kr_ac_yonsei_mobilesw_shell.ExecuteShellCommand;
@@ -58,7 +59,7 @@ public class AdbCommandGenerationTest {
 		
 		
 		if (files!=null) {
-			try {
+			try {				
 				int count = 0;
 				for (File subfile : files) {
 					count = count + 1;
@@ -156,9 +157,9 @@ public class AdbCommandGenerationTest {
 						
 						
 						String intentSpec = sb.toString();
-						String path = buildIntentSpecParam("param"+count+".is", intentSpec);
+						String path = JavaCommand.buildIntentSpecParam("param"+count+".is", intentSpec);
 						
-						intentSpec = " -f " + path;
+						intentSpec = " -ftmp " + path;
 						
 						//if(intentSepc.charAt(0) != '"')
 						//{
@@ -188,26 +189,4 @@ public class AdbCommandGenerationTest {
 		if (stop) 
 			fail("Something wrong...");
 	}
-	
-	public static String buildIntentSpecParam(String filename, String spec) {
-		File param_is = new File(filename);
-		String currentWorkingDir = param_is.getAbsolutePath();
-		
-		try {
-			FileWriter fw = new FileWriter(param_is);
-			Scanner scan = new Scanner(new StringReader(spec));
-			while (scan.hasNextLine()) {
-				String line = scan.nextLine();
-				fw.write(line + "\n");
-			}
-			fw.close();
-			scan.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
-		
-		return currentWorkingDir;
-	}
-
 }

@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.logging.FileHandler;
@@ -162,22 +163,25 @@ public class BenchAdd extends JFrame implements InterfaceWithExecution {
 				String command = System.getProperty("user.dir") 
 						+ "/../GenTestsfromIntentSpec/bin/" + genCommand + " AdbCommand "; 
 				
+				long count = Calendar.getInstance().getTimeInMillis();
 				
-				String intentSepc = txtIntentSpec.getText();
-				if(intentSepc.charAt(0) != '"')
-				{
-					intentSepc = "\"" + intentSepc;
-				}
-				if(intentSepc.charAt(intentSepc.length() - 1) != '"')
-				{
-					intentSepc = intentSepc + "\""; 
-				}
+				String intentSpec = txtIntentSpec.getText();
+//				if(intentSpec.charAt(0) != '"')
+//				{
+//					intentSpec = "\"" + intentSpec;
+//				}
+//				if(intentSpec.charAt(intentSpec.length() - 1) != '"')
+//				{
+//					intentSpec = intentSpec + "\""; 
+//				}
 				
-
+				String path = JavaCommand.buildIntentSpecParam("param"+count+".is", intentSpec);
+				
+				intentSpec = " -ftmp " + path;
 				
 				command = command + cboMakeMode.getSelectedIndex() + " " +
 								    txtCount.getText() + " " +
-								    intentSepc + " ";
+								    intentSpec + " ";
 				
 				System.out.println("RUN: " + command);
 				
