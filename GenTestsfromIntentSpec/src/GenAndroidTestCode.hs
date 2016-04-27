@@ -38,16 +38,16 @@ genAndroidTestCode' suffix args intent (_                                      :
 {--------------------------------------------------------------------------------------- 
 A sample test code for Activity
 
-입력: 
-   1) 패키지 이름 : PKG_NAME (e.g., com.example.khchoi.helloandroid) 
-   2) 테스트 대상 Activity 클래스 이름 : CLASS_NAME  (e.g., MainActivity)
-   3) 디렉토리 위치 : PROJECT_HOME  (e.g., D:\khcohi\Android\AndroidStudioProjects\HelloAndroid)
+?엯?젰: 
+   1) ?뙣?궎吏? ?씠由? : PKG_NAME (e.g., com.example.khchoi.helloandroid) 
+   2) ?뀒?뒪?듃 ???긽 Activity ?겢?옒?뒪 ?씠由? : CLASS_NAME  (e.g., MainActivity)
+   3) ?뵒?젆?넗由? ?쐞移? : PROJECT_HOME  (e.g., D:\khcohi\Android\AndroidStudioProjects\HelloAndroid)
    4) SUFFIX (e.g., 0001)
 
-출력:
-   1) 테스트 클래스 이름 : TEST_CLASS_NAME (e.g., ${CLASS_NAME}TEST_${SUFFIX})
-   2) 파일 : ${PROJECT_HOME}\app\src\androidTest\java\패키지명에 해당하는 경로{com\example\khchoi\helloandroid}\${TEST_CLASS_NAME}.java
-   3) 파일 내용
+異쒕젰:
+   1) ?뀒?뒪?듃 ?겢?옒?뒪 ?씠由? : TEST_CLASS_NAME (e.g., ${CLASS_NAME}TEST_${SUFFIX})
+   2) ?뙆?씪 : ${PROJECT_HOME}\app\src\androidTest\java\?뙣?궎吏?紐낆뿉 ?빐?떦?븯?뒗 寃쎈줈{com\example\khchoi\helloandroid}\${TEST_CLASS_NAME}.java
+   3) ?뙆?씪 ?궡?슜
 
 // MainActivityTest_00001.java
    
@@ -55,14 +55,14 @@ package ${PKG_NAME};
 
 import android.content.Intent;
 import android.test.ActivityUnitTestCase;
-... 추가 필요 ...
+... 異붽? ?븘?슂 ...
 
 public class ${TEST_CLASS_NAME} extends ActivityUnitTestCase<${CLASS_NAME}> {
     public ${TEST_CLASS_NAME}() {
         super(${CLASS_NAME}.class);
     }
     
-    // 이 코드를 생성할 때 사용한 인텐트 스펙을 주석으로 표시
+    // ?씠 肄붾뱶瑜? ?깮?꽦?븷 ?븣 ?궗?슜?븳 ?씤?뀗?듃 ?뒪?럺?쓣 二쇱꽍?쑝濡? ?몴?떆
 
     public void test_NNNNN() {
         Intent activityIntent =  new Intent();
@@ -70,11 +70,11 @@ public class ${TEST_CLASS_NAME} extends ActivityUnitTestCase<${CLASS_NAME}> {
                 "${PKG_NAME}.${CLASS_NAME}");
 
         activityIntent.setAction("my action");
-        ... 주어진 intent에 따라 적절한 코드 생성 ...
+        ... 二쇱뼱吏? intent?뿉 ?뵲?씪 ?쟻?젅?븳 肄붾뱶 ?깮?꽦 ...
         startActivity(activityIntent, null, null);
     }
     
-    // ... 생성할 인텐트 개수만큼 메소드를 나열
+    // ... ?깮?꽦?븷 ?씤?뀗?듃 媛쒖닔留뚰겮 硫붿냼?뱶瑜? ?굹?뿴
 }
    
 
@@ -163,6 +163,7 @@ testStmt (Flag flags) = [ ]
 --    map (\flag -> 
 --        BlockStmt (ExpStmt (MethodInv (MethodCall (Name [Ident locVarintent,Ident "setFlags"]) 
 --            [Lit (String flag)])))) flags
+testStmt (Internal _) = [ ]
 
 
 testStmtExtra :: (String, ExtraType) -> [BlockStmt]
@@ -212,16 +213,16 @@ genBroadcastReceiverTestCode :: [String] -> IO ()
 genBroadcastReceiverTestCode args = putStrLn "*** Not support for generating Broadcast Receiver test code"
 
 {---------------------------------------------------------------------------------------  
-입력: 
-   1) 패키지 이름 : PKG_NAME (e.g., com.example.khchoi.helloandroid) 
-   2) 테스트 대상 Service 클래스 이름 : CLASS_NAME  (e.g., MyService)
-   3) 디렉토리 위치 : PROJECT_HOME  (e.g., D:\khcohi\Android\AndroidStudioProjects\HelloAndroid)
+?엯?젰: 
+   1) ?뙣?궎吏? ?씠由? : PKG_NAME (e.g., com.example.khchoi.helloandroid) 
+   2) ?뀒?뒪?듃 ???긽 Service ?겢?옒?뒪 ?씠由? : CLASS_NAME  (e.g., MyService)
+   3) ?뵒?젆?넗由? ?쐞移? : PROJECT_HOME  (e.g., D:\khcohi\Android\AndroidStudioProjects\HelloAndroid)
    4) SUFFIX (e.g., 0001)
 
-출력:
-   1) 테스트 클래스 이름 : TEST_CLASS_NAME (e.g., ${CLASS_NAME}TEST_${SUFFIX})
-   2) 파일 : ${PROJECT_HOME}\app\src\androidTest\java\패키지명에 해당하는 경로{com\example\khchoi\helloandroid}\${TEST_CLASS_NAME}.java
-   3) 파일 내용
+異쒕젰:
+   1) ?뀒?뒪?듃 ?겢?옒?뒪 ?씠由? : TEST_CLASS_NAME (e.g., ${CLASS_NAME}TEST_${SUFFIX})
+   2) ?뙆?씪 : ${PROJECT_HOME}\app\src\androidTest\java\?뙣?궎吏?紐낆뿉 ?빐?떦?븯?뒗 寃쎈줈{com\example\khchoi\helloandroid}\${TEST_CLASS_NAME}.java
+   3) ?뙆?씪 ?궡?슜
 
 // MyServiceTest_00001.java
 
@@ -229,7 +230,7 @@ package ${PKG_NAME};
 
 import android.content.Intent;
 import android.test.ServiceTestCase;
-... 추가 필요 ...
+... 異붽? ?븘?슂 ...
 
 public class ${TEST_CLASS_NAME} extends ServiceTestCase<${CLASS_NAME}> {
     public ${TEST_CLASS_NAME}() {
@@ -246,7 +247,7 @@ public class ${TEST_CLASS_NAME} extends ServiceTestCase<${CLASS_NAME}> {
         Intent serviceIntent = new Intent();
         serviceIntent.setClassName("${PKG_NAME}","${PKG_NAME}.${CLASS_NAME}");
         serviceIntent.setAction("my action");
-        ... 주어진 intent에 따라 적절한 코드 생성 ... 
+        ... 二쇱뼱吏? intent?뿉 ?뵲?씪 ?쟻?젅?븳 肄붾뱶 ?깮?꽦 ... 
         startService(serviceIntent);
     }
 

@@ -3,13 +3,13 @@ module IntentSpec where
 type IntentSpec = [Intent]
 type Intent = [Field]
 data Field = Action String | Category [String] | Data String | Type String 
-             | Component (Maybe CompType) String String | Extra [(String, ExtraType)] | Flag [String] deriving (Show, Eq)
+             | Component (Maybe CompType) String String | Extra [(String, ExtraType)] | Flag [String] | Internal Bool deriving (Show, Read, Eq) 
 
-data CompType = Activity | Service | BroadcastReceiver | ContentProvider deriving (Show, Eq)
+data CompType = Activity | Service | BroadcastReceiver | ContentProvider deriving (Show, Read, Eq)
 
 data ExtraType = StringType String | BooleanType Bool | IntegerType Int | LongType Integer | FloatType Float
                  | UriType String | ComponentType String String
-                 | IntArray [Int] | LongArray [Integer] | FloatArray [Float] deriving (Show, Eq)
+                 | IntArray [Int] | LongArray [Integer] | FloatArray [Float] deriving (Show, Read, Eq)
 
 -- TODO: Need to move all declarations relevant to IntentSpec here.  
 

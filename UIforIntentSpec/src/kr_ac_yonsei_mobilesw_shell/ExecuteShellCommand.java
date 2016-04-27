@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import kr_ac_yonsei_mobilesw_UI.BenchAdd;
+import kr_ac_yonsei_mobilesw_UI.Benchbase;
 import kr_ac_yonsei_mobilesw_UI.Benchmark;
 import kr_ac_yonsei_mobilesw_UI.InterfaceWithExecution;
 
@@ -66,7 +67,7 @@ public class ExecuteShellCommand {
 		worker.start();
 	}
 	
-	public static void showLogcat(Benchmark ui,  String command)
+	public static void showLogcat(Benchbase ui,  String command)
 	{
 		Thread worker = new Thread()
 		{
@@ -101,7 +102,7 @@ public class ExecuteShellCommand {
 		worker.start();
 	}
 	
-	public static void readDevice(Benchmark ui, String command) 
+	public static void readDevice(Benchbase base, String command) 
 	{		
 		Thread worker = new Thread()
 		{
@@ -118,6 +119,7 @@ public class ExecuteShellCommand {
 						{
 							if(i == 2)
 							{
+								int listNum = 0;
 								BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 								String line = "";
 								
@@ -125,8 +127,9 @@ public class ExecuteShellCommand {
 								{
 									if(line.equals("") == false)
 									{
-										ui.showDeviceList(line);
+										base.showDeviceList(line, listNum);
 									}
+									listNum++;
 								}
 							}
 						}

@@ -45,19 +45,20 @@ public class BenchStart {
 	XSSFSheet sheet;
 	
 	boolean flagUseIntentAssertion = false; // IntentAssert 
-	
+	public boolean benchStartProcessingFlag = false;
 	private String log_file_name;
 	
 	public void setLogFileName(String log_file_name) {
 		this.log_file_name = log_file_name;
 	}
 	
-	public Thread start(final Benchmark ui) 
+	public Thread start(final Benchbase base) 
 	{		
 		Thread worker = new Thread()
 		{
 			public void run()
 			{
+				System.out.println("Test start");
 				makeExcel();
 				
 				int Normal = 0;
@@ -70,19 +71,18 @@ public class BenchStart {
 				int IntentSpecPassAndExit = 0;
 				int IntentSpecPassAndErrorExit = 0;
 				int CantAnalyze = 0;
+				int trycount = 0;
 				
-				
-				if(ui.modelAdbCommand.getRowCount() < 1)
+				if(base.modelAdbCommand.getRowCount() < 1)
 				{
 					return;
 				}
 				
-				for(int i = 0; i < ui.modelAdbCommand.getRowCount(); i++)
+				for(int i = 0; i < base.modelAdbCommand.getRowCount(); i++)
 				{
-					
-					if(ui.benchStartProcessingFlag == true)
+					if(benchStartProcessingFlag == true)
 					{
-						String adbCommand = ui.modelAdbCommand.getValueAt(i, 1).toString();
+						String adbCommand = base.modelAdbCommand.getValueAt(i, 1).toString();
 						String packageName = adbCommand.substring(adbCommand.indexOf("-n ") + 3, adbCommand.indexOf('/', adbCommand.indexOf("-n ") + 3));
 						
 						ComponentMode mode;
@@ -100,20 +100,15 @@ public class BenchStart {
 							mode = ComponentMode.Service;
 						}
 						
-						ui.exec("adb shell am force-stop " + packageName);
+						base.exec("adb shell am force-stop " + packageName);
 						try {
 							Thread.currentThread().sleep(2000);
 						} catch (InterruptedException e) {
 							
-						}
+						}		
 						
-						ui.txtAdbCommand.setText(adbCommand);
-						ui.txtFilter.setText(packageName);
-						ui.txtAdbCommandLog.setText("");
-						
-						ui.LogcatClear();
-						ui.filterEvent();
-						ui.exec();
+						base.setLogcat(adbCommand, packageName);
+												
 						try {
 							Thread.currentThread().sleep(3000);
 						} catch (InterruptedException e) {
@@ -121,7 +116,8 @@ public class BenchStart {
 						}
 						
 						boolean normalCommand = false;
-						String[] spLine = ui.txtAdbCommandLog.getText().split("\n");
+						String[] spLine = base.getAdbCommandLog();
+								
 						for(int k = 0; k < spLine.length; k++)
 						{
 							addRowinExcel(spLine[k]);
@@ -148,9 +144,9 @@ public class BenchStart {
 							}
 						}
 						
-						AnalyzeResult result = benchResult(ui, packageName, mode, normalCommand);
-						ui.modelAdbCommand.setValueAt(result, i, 2);
-						ui.modelAdbCommand.fireTableDataChanged();
+						AnalyzeResult result = benchResult(base, packageName, mode, normalCommand);
+						base.modelAdbCommand.setValueAt(result, i, 2);
+						base.modelAdbCommand.fireTableDataChanged();
 						
 						if(normalCommand == true)
 						{
@@ -193,30 +189,36 @@ public class BenchStart {
 						}
 						else
 						{
-							CantAnalyze++;
+							if(trycount < 10 && trycount != 5)
+							{
+								base.AdbKillAndStart();														
+								i--;
+								trycount++;
+								System.out.println("Retry Count : " + trycount);
+								continue;
+							}
+							else if(trycount == 5)
+							{
+								base.RebootDevice();								
+								i--;
+								trycount++;
+								System.out.println("Retry Count : " + trycount);
+								continue;
+							}
+							else
+							{
+								trycount = 0;
+								CantAnalyze++;
+							}
 						}
 					
 						int resultCount = Normal + Exit + ErrorExit + 
 								+ IntentSpecCatchAndNormal +  IntentSpecCatchAndExit + IntentSpecCatchAndErrorExit
 								+ IntentSpecPassAndNormal + IntentSpecPassAndExit + IntentSpecPassAndErrorExit + CantAnalyze;
 						
-						ui.txtBenchResult.setText("Pass\t: " + (Normal+Exit)
-								// + "\nPass\t\t: " + Exit 
-								+ "\nFail\t: " + ErrorExit
-								
-								+ (flagUseIntentAssertion ?
-										
-								  "\nAssert/F=>Pass\t: " + IntentSpecCatchAndNormal
-								+ "\nAssert/F=>Pass\t: " + IntentSpecCatchAndExit
-								+ "\nAssert/F=>Fail\t: " + IntentSpecCatchAndErrorExit
-								+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndNormal 
-								+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndExit 
-								+ "\nAssert/T=>Fail\t: " + IntentSpecPassAndErrorExit
-								
-								: "")
-								
-								+ "\nProgress\t: " + (int)(((double)resultCount / ui.modelAdbCommand.getRowCount()) * 100) + "% (" + (resultCount + "/" + ui.modelAdbCommand.getRowCount() + ")")
-								+ "\nAnalysis Failure : " + CantAnalyze );
+						base.showResult(Normal, Exit, ErrorExit, IntentSpecCatchAndNormal, IntentSpecCatchAndExit,
+								IntentSpecCatchAndErrorExit, IntentSpecPassAndNormal, IntentSpecPassAndExit, IntentSpecPassAndErrorExit,
+								resultCount, CantAnalyze, flagUseIntentAssertion);
 						
 						addRowinExcel("result : " + result.toString());
 						addRowinExcel("------------------------------------------------------------");
@@ -259,12 +261,12 @@ public class BenchStart {
 				    
 					workbook.write(new FileOutputStream(fileName));  // ...   String fileName = "LOG_"+dTime+".xlsx"; write(new File(fileName);
 					workbook.close();  // close()
+					System.out.println("Test end");
+					base.endBenchStart(fileName);
 				//} catch (WriteException | IOException e) {  // IOException
 				} catch(IOException e) {
 					e.printStackTrace();
 				}
-				
-				ui.benchmarkRunButtonFix();
 			}
 		};
 		
@@ -401,22 +403,22 @@ public class BenchStart {
 	final XSSFColor blue = new XSSFColor(Color.BLUE);
 	
 	
-    public AnalyzeResult benchResult(Benchmark ui, String filter, ComponentMode mode, boolean normalCommand)
+    public AnalyzeResult benchResult(Benchbase base, String filter, ComponentMode mode, boolean normalCommand)
     {
     	AnalyzeResult result = AnalyzeResult.CantAnalyze;
     	int IntentSpecFlag = 0;		//0 : NonIntentSpec, 1 : IntentSpecCatch, 2 : IntentSpecPass
     	int ProgramState = 0;		//0 : Normal, 1 : Exit, 2 : ErrorExit
     	
-    	ui.LogcatLock.lock();
+    	base.LogcatLock.lock();
 		
 //		try {
 			
-			for(int i = 0; i < ui.modelLogcatView.getRowCount(); i++)
+			for(int i = 0; i < base.modelLogcatView.getRowCount(); i++)
 			{
 //				WritableFont font;
 				XSSFFont font;
 				
-				String level = ui.modelLogcatView.getValueAt(i, 0).toString();
+				String level = base.modelLogcatView.getValueAt(i, 0).toString();
                 if(level.equals("V"))
                 {
                 	//font = new WritableFont(WritableFont.createFont("Courier New"), WritableFont.DEFAULT_POINT_SIZE, WritableFont.NO_BOLD, false, UnderlineStyle.NO_UNDERLINE, Colour.BLACK);
@@ -473,7 +475,7 @@ public class BenchStart {
                 XSSFCellStyle analysisFormat = workbook.createCellStyle();
 				analysisFormat.setFont(font);
 				
-				String rawLog = ui.modelLogcatView.getValueAt(i, 7).toString();
+				String rawLog = base.modelLogcatView.getValueAt(i, 7).toString();
 				
 				if(mode == ComponentMode.Activity)
 				{
@@ -615,7 +617,7 @@ public class BenchStart {
 
 				for(int col=0; col<=7; col++) {
 					XSSFCell cell = row.createCell(col);				
-					cell.setCellValue(ui.modelLogcatView.getValueAt(i, col).toString());
+					cell.setCellValue(base.modelLogcatView.getValueAt(i, col).toString());
 					cell.setCellStyle(analysisFormat);
 				}
 				
@@ -679,7 +681,7 @@ public class BenchStart {
 //			e.printStackTrace();
 //		}
 		
-		ui.LogcatLock.unlock();
+		base.LogcatLock.unlock();
 		
 		return result;
     }
