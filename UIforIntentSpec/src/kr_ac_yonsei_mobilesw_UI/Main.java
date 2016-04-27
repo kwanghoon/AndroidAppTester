@@ -209,7 +209,7 @@ public class Main extends JFrame implements InterfaceWithExecution {
 		        Config.putImportPath(fc.getCurrentDirectory().getAbsolutePath());
 				
 				String command = JavaCommand.javaCmd() 
-									+ "com.example.java.GenIntentSpecFromAPK " 
+									+ "com.example.java.GenIntentSpecFromAPK -ui " 
 									+ "\"" + file.getAbsolutePath() + "\""; // ' ' in the file name
 				
 				System.out.println("RUN: " + command);

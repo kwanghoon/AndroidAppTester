@@ -59,7 +59,7 @@ import javax.swing.JSplitPane;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
-public class Benchmark extends JFrame {
+public class Benchmark extends JFrame implements Benchbase {
 
 	private static final long serialVersionUID = -8114454317556683079L;
 	
@@ -69,7 +69,6 @@ public class Benchmark extends JFrame {
 	private boolean isBusy = false;
 	private char logLevel = 'V';
 	private char nowLogLevel = 'V';
-	public final ReentrantLock LogcatLock = new ReentrantLock();
 	public int logcatReadStartIndex = 0;
 	public String logcatFilter = "";
 	public String NowTxtFilter = "";
@@ -84,9 +83,7 @@ public class Benchmark extends JFrame {
 	private JScrollPane scrollPaneLogcat;
 	private JTable tblLogcat;
 	private DefaultTableModel modelLogcat;
-	DefaultTableModel modelLogcatView;
 	private DefaultTableModel modelLogcatFilter;
-	DefaultTableModel modelAdbCommand;
 	JTextField txtFilter;
 	private JTextField txtAdbPath;
 	private JComboBox cboDeviceID;
@@ -98,6 +95,7 @@ public class Benchmark extends JFrame {
 	public boolean showLogCatProcessingFlag = false;  
 	public JButton btnBenchStart = null;
 	
+	public String excelfileName = "";
 	private JFileChooser fc = new JFileChooser();
 	
 	HashMap<String, String> mapPidToApplicationName = new HashMap<String, String>();
@@ -258,7 +256,6 @@ public class Benchmark extends JFrame {
 		modelLogcat.addColumn("Text");
 		modelLogcat.addColumn("RawMessage");
 		
-		modelLogcatView = new DefaultTableModel();
 		modelLogcatView.addColumn("Level");
 		modelLogcatView.addColumn("Time");
 		modelLogcatView.addColumn("PID");
@@ -483,7 +480,6 @@ public class Benchmark extends JFrame {
 		scrollPaneBench.getViewport().setBackground(Color.white);
 		contentPane.add(scrollPaneBench);
 		
-		modelAdbCommand = new DefaultTableModel();
 		modelAdbCommand.addColumn("Seq");
 		modelAdbCommand.addColumn("Command");
 		modelAdbCommand.addColumn("Result");
@@ -947,7 +943,8 @@ public class Benchmark extends JFrame {
     }
     */
     
-    public void showDeviceList(String deviceText)
+	@Override
+    public void showDeviceList(String deviceText, int listNum)
     {
     	if(deviceText.contains("List of devices attached")){
     		return;
@@ -1002,6 +999,7 @@ public class Benchmark extends JFrame {
     	}
     	
     	BenchStart benchStart = new BenchStart();
+    	benchStart.benchStartProcessingFlag = benchStartProcessingFlag;
     	benchStart.start(Benchmark.this);
 		
     }
@@ -1100,4 +1098,133 @@ public class Benchmark extends JFrame {
 		
 		return command;
     }
+
+	@Override
+	public void setLogcat(String adbCommand, String packageName) {
+		// TODO Auto-generated method stub
+		txtAdbCommand.setText(adbCommand);
+		txtFilter.setText(packageName);
+		txtAdbCommandLog.setText("");
+		
+		LogcatClear();
+		filterEvent();
+		exec();
+		
+	}
+
+	@Override
+	public String[] getAdbCommandLog() {
+		// TODO Auto-generated method stub
+		return txtAdbCommandLog.getText().split("\n");
+	}
+
+	@Override
+	public void showResult(int Normal, int Exit, int ErrorExit, int IntentSpecCatchAndNormal,
+			int IntentSpecCatchAndExit, int IntentSpecCatchAndErrorExit, int IntentSpecPassAndNormal,
+			int IntentSpecPassAndExit, int IntentSpecPassAndErrorExit, int resultCount, int CantAnalyze, boolean flagUseIntentAssertion) {
+		// TODO Auto-generated method stub
+		txtBenchResult.setText("Pass\t: " + (Normal+Exit)
+				// + "\nPass\t\t: " + Exit 
+				+ "\nFail\t: " + ErrorExit
+				
+				+ (flagUseIntentAssertion ?
+						
+				  "\nAssert/F=>Pass\t: " + IntentSpecCatchAndNormal
+				+ "\nAssert/F=>Pass\t: " + IntentSpecCatchAndExit
+				+ "\nAssert/F=>Fail\t: " + IntentSpecCatchAndErrorExit
+				+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndNormal 
+				+ "\nAssert/T=>Pass\t: " + IntentSpecPassAndExit 
+				+ "\nAssert/T=>Fail\t: " + IntentSpecPassAndErrorExit
+				
+				: "")
+				
+				+ "\nProgress\t: " + (int)(((double)resultCount / modelAdbCommand.getRowCount()) * 100) + "% (" + (resultCount + "/" + modelAdbCommand.getRowCount() + ")")
+				+ "\nAnalysis Failure : " + CantAnalyze );
+	}
+
+	@Override
+	public void endBenchStart(String fileName) {
+		// TODO Auto-generated method stub
+		excelfileName = fileName;
+		benchmarkRunButtonFix();
+	}
+
+	@Override
+	public void AdbKillAndStart() {
+		// TODO Auto-generated method stub
+		String deviceID = "";
+		String command = "adb -s 5888e6a4 logcat -v threadtime *:V";		//Don't have command
+		
+		if(cboDeviceID.getSelectedItem() == null)
+		{
+			command = "adb logcat -v threadtime *:V";
+		}
+		else
+		{
+			deviceID = cboDeviceID.getSelectedItem().toString().substring(cboDeviceID.getSelectedItem().toString().indexOf(":") + 1, cboDeviceID.getSelectedItem().toString().length());
+			command = "adb -s " + deviceID + " logcat -v threadtime *:V";
+		}
+		
+		exec("adb -s " + deviceID + " kill-server");
+		try {
+			Thread.currentThread().sleep(2000);
+		} catch (InterruptedException e) {
+			
+		}
+
+		exec("adb -s " + deviceID + " start-server");
+		try {
+			Thread.currentThread().sleep(3000);
+		} catch (InterruptedException e) {
+
+		}
+		
+		if(txtAdbPath.getText().trim().equals(""))
+		{
+			command = adbPathString + command;
+		}
+		else
+		{
+			command = txtAdbPath.getText().trim() + command;
+		}
+		
+		logger.info("btnViewlogcat => DevicesID : " + deviceID + ", command : " + command);
+		ExecuteShellCommand.showLogcat(Benchmark.this, command);
+	}
+
+	@Override
+	public void RebootDevice() {
+		// TODO Auto-generated method stub
+		String deviceID = "";
+		String command = "adb -s 5888e6a4 logcat -v threadtime *:V";		//Don't have command
+		
+		if(cboDeviceID.getSelectedItem() == null)
+		{
+			command = "adb logcat -v threadtime *:V";
+		}
+		else
+		{
+			deviceID = cboDeviceID.getSelectedItem().toString().substring(cboDeviceID.getSelectedItem().toString().indexOf(":") + 1, cboDeviceID.getSelectedItem().toString().length());
+			command = "adb -s " + deviceID + " logcat -v threadtime *:V";
+		}
+		
+		exec("adb -s " + deviceID + " reboot");
+		try {
+			Thread.currentThread().sleep(180000);
+		} catch (InterruptedException e) {
+			
+		}
+		
+		if(txtAdbPath.getText().trim().equals(""))
+		{
+			command = adbPathString + command;
+		}
+		else
+		{
+			command = txtAdbPath.getText().trim() + command;
+		}
+		
+		logger.info("btnViewlogcat => DevicesID : " + deviceID + ", command : " + command);
+		ExecuteShellCommand.showLogcat(Benchmark.this, command);
+	}
 }

@@ -23,11 +23,15 @@ import FlagElements
 --cabal install checkers    --> 0.4.2
 
 import Data.Char
-import Control.Monad
+
+import Control.Monad 
 
 import IntentSpec
 import GenAndroidTestCode
   
+import Control.Applicative -- Otherwise you can't do the Applicative instance.
+
+
 infixr 5 +++
 
 --The monad of parsers
@@ -40,6 +44,26 @@ instance Monad Parser where
    p >>= f                    =  P (\inp -> case parse p inp of
                                                []        -> []
                                                [(v,out)] -> parse (f v) out)
+                                               
+--------------------------------adding----
+
+instance Functor Parser where
+  fmap = liftM
+
+instance Applicative Parser where
+  pure  = return
+  (<*>) = ap
+                                               
+
+
+--------------------------------adding----
+
+instance Alternative Parser where
+  empty = mzero
+  (<|>) = mplus
+                                               
+------------------------------------------------ 
+
 
 instance MonadPlus Parser where
    mzero                      =  P (\inp -> [])
@@ -47,6 +71,9 @@ instance MonadPlus Parser where
                                                []        -> parse q inp
                                                [(v,out)] -> [(v,out)])
 
+ 
+  
+  
 --Basic parsers
 -------------
 
@@ -103,12 +130,12 @@ many p                        =  many1 p +++ return []
 
 many1                         :: Parser a -> Parser [a]
 many1 p                       =  do v  <- p
-                                    vs <- many p
+                                    vs <- Main.many p
                                     return (v:vs)
 
 ident                         :: Parser String
 ident                         =  do x  <- lower
-                                    xs <- many alphanum
+                                    xs <- Main.many alphanum
                                     return (x:xs)
 
 nat                           :: Parser Int
@@ -122,7 +149,7 @@ int                           =  do char '-'
                                   +++ nat
 
 space                         :: Parser ()
-space                         =  do many (sat isSpace)
+space                         =  do Main.many (sat isSpace)
                                     return ()
 
 --Ignoring spacing
@@ -151,7 +178,7 @@ symbol xs                     =  token (string xs)
 
 identAlpha :: Parser String
 identAlpha = do x  <- alphanum
-                xs <- many alphanum
+                xs <- Main.many alphanum
                 return (x:xs)
                                          
 idOrNum :: Parser String
@@ -170,7 +197,7 @@ alphanumOrDot = do s <- sat isAlphaNum
 
 identOrDot :: Parser String
 identOrDot = do x  <- letter
-                xs <- many alphanumOrDot
+                xs <- Main.many alphanumOrDot
                 return (x:xs)
                                          
 idOrDot :: Parser String
@@ -196,7 +223,7 @@ alphanumOrOther = do s <- sat isAlphaNum
                                       
 identOrOther :: Parser String
 identOrOther = do x  <- letter
-                  xs <- many alphanumOrOther
+                  xs <- Main.many alphanumOrOther
                   return (x:xs)
 
 idOrOther :: Parser String
@@ -236,6 +263,9 @@ fields = do a <- action
                  s <- fields
                  return (e : s)
           +++ do f <- flag
+                 s <- fields
+                 return (f : s)
+          +++ do f <- internal
                  s <- fields
                  return (f : s)
           +++ return []
@@ -374,7 +404,7 @@ notDoubleQuotes =  sat (/= '"')
 
 strWithSp :: Parser String
 strWithSp = do x <- notDoubleQuotes
-               xs <- many notDoubleQuotes
+               xs <- Main.many notDoubleQuotes
                return (x:xs)
 
 stringWithSpace :: Parser String
@@ -522,6 +552,12 @@ flagSub = do symbol ","
              return (Flag (fl : fls))
            +++ return (Flag [])
 
+internal :: Parser Field
+internal = do symbol "internal"
+              symbol "="
+              bool <- boolean
+              return (Internal bool)
+
 arr :: Parser String
 arr = do a1 <- symbol "[]"
          a2 <- arr
@@ -635,6 +671,7 @@ removeDuplicateConstructor (Type x : xs) = Type x : removeDuplicateConstructor (
 removeDuplicateConstructor (Component maybe x1 x2 : xs) = Component maybe x1 x2 : removeDuplicateConstructor (xs \\ [Component maybe' y1 y2 | Component maybe' y1 y2 <- xs])
 removeDuplicateConstructor (Extra x : xs) = removeDuplicateExtraKeys (Extra x) : removeDuplicateConstructor (xs \\ [Extra y | Extra y <- xs])
 removeDuplicateConstructor (Flag x : xs) = Flag x : removeDuplicateConstructor (xs \\ [Flag y | Flag y <- xs])
+removeDuplicateConstructor (Internal x : xs) = Internal x : removeDuplicateConstructor (xs \\ [Flag y | Flag y <- xs])
 
 rmdups :: Eq a => [a] -> [a]
 rmdups [] = []
@@ -662,7 +699,10 @@ addAndRemoveComponentFix (Component maybe x1 x2 : ss) ds = Component maybe x1 x2
 
 makeAdbCommand :: IntentSpec -> String
 makeAdbCommand [] = []
-makeAdbCommand (i:is) = "adb shell am " ++ makeIntentCompType i ++ makeIntentCommand i ++ "\n" ++ makeAdbCommand is
+makeAdbCommand (i:is) = if [f | f@(Internal True) <- i] == [] 
+  then "adb shell am " ++ makeIntentCompType i ++ makeIntentCommand i ++ "\n" ++ makeAdbCommand is
+  else makeAdbCommand is
+
 
 makeIntentCompType :: Intent -> String
 makeIntentCompType [] = "start"   -- Activity by default
@@ -681,6 +721,7 @@ makeIntentCommand (Type x : xs) = " -t " ++ x ++ makeIntentCommand xs
 makeIntentCommand (Component maybe x1 x2 : xs) = " -n " ++ x1 ++ "/" ++ x2 ++ makeIntentCommand xs
 makeIntentCommand (Extra x : xs)  = makeExtra x ++ makeIntentCommand xs
 makeIntentCommand (Flag x : xs) = makeIntentCommand xs
+makeIntentCommand (Internal x : xs) = makeIntentCommand xs
 
 makeCagegory :: [String] -> String
 makeCagegory [] = []
@@ -727,13 +768,14 @@ randomOnly :: Int -> IntentSpec -> IntentSpec
 randomOnly _ [] = []
 randomOnly count (s:ss) = (replaceComponent s (makeTestCaseOfIntentSpec count)) ++ randomOnly count ss
 
-makeTestArtifact :: String -> IntentSpecStr -> IntentSpec -> [String] -> IO ()
-makeTestArtifact "AdbCommand" intentSpecS intents args =
+makeTestArtifact :: String -> IntentSpecStr -> IntentSpec -> [String] -> String -> IO ()
+makeTestArtifact "AdbCommand" intentSpecS intents args thefile = do
+    writeFile (reverse(drop 3 (reverse thefile)) ++ ".randomis") (show intents)
     putStr (makeAdbCommand intents)
             
-makeTestArtifact "AndroidTestCode" intentSpecS intents args = 
+makeTestArtifact "AndroidTestCode" intentSpecS intents args thefile = 
     genAndroidTestCode intentSpecS intents args
-    
+
 --    
 type RandomType = Int
 type IntentSpecStr = String
@@ -741,20 +783,22 @@ type Count = Int
 type ArtifactType = String
 type ComponentType = Int
 
-make :: ArtifactType -> RandomType -> Count -> IntentSpecStr -> [String] -> IO ()
-make artifactType randomType count intentSpecS args
+
+make :: ArtifactType -> RandomType -> Count -> IntentSpecStr -> [String] -> String -> IO ()
+    
+make artifactType randomType count intentSpecS args thefile
     | randomType==0 = 
         let intents = removeDuplicateConstructorIntentSpec 
                         (passOnly count (eval intentSpecS)) 
-        in  makeTestArtifact artifactType intentSpecS intents args
+        in  makeTestArtifact artifactType intentSpecS intents args thefile
     | randomType==1 = 
         let intents = removeDuplicateConstructorIntentSpec 
                         (randomUsingSpec count (eval intentSpecS)) 
-        in  makeTestArtifact artifactType intentSpecS intents args
+        in  makeTestArtifact artifactType intentSpecS intents args thefile
     | randomType==2 = 
         let intents = removeDuplicateConstructorIntentSpec 
                         (randomOnly count (eval intentSpecS)) 
-        in  makeTestArtifact artifactType intentSpecS intents args
+        in  makeTestArtifact artifactType intentSpecS intents args thefile
 
 {-
   Arguments:
@@ -774,17 +818,23 @@ make artifactType randomType count intentSpecS args
 main :: IO ()
 main = do hSetEncoding stdout utf8
           args_0 <- getArgs
-	  let artifact_type = args_0 !! 0
-	  let random_type = castInt 1  args_0
-	  let count = castInt 2 args_0
-	  (spec, args, keep, thefile) <- readIntentSpec (drop 3 args_0)
+          let artifact_type = args_0 !! 0
+          let random_type = castInt 1  args_0
+          let count = castInt 2 args_0
+          (spec, args, keep, thefile) <- readIntentSpec (drop 3 args_0)
           -- artifact type, random type, count, intent spec,
           -- putStrLn spec
-	  -- mapM_ putStrLn args
-          make  artifact_type random_type count spec args
+          -- mapM_ putStrLn args
+          if artifact_type == "AndroidTestCodeFromRandomis" 
+                then  let intents = read spec::IntentSpec 
+                          in  makeTestArtifact "AndroidTestCode" spec intents args thefile
+                else  make  artifact_type random_type count spec args thefile
+              
           if keep then return ()  
-	  else do fileExists <- doesFileExist thefile
-	          when fileExists (removeFile thefile)
+          else do fileExists <- doesFileExist thefile
+                  when fileExists (removeFile thefile)
+                                    
+
 
 castInt :: Int -> [String] -> Int
 castInt 0 (arg:args) = read arg :: Int
