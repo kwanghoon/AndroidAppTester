@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import kr_ac_yonsei_mobilesw_UI.BenchAdd;
+import kr_ac_yonsei_mobilesw_UI.Benchbase;
 import kr_ac_yonsei_mobilesw_UI.Benchmark;
 import kr_ac_yonsei_mobilesw_UI.InterfaceWithExecution;
 
@@ -66,7 +67,7 @@ public class ExecuteShellCommand {
 		worker.start();
 	}
 	
-	public static void showLogcat(Benchmark ui,  String command)
+	public static void showLogcat(Benchbase ui,  String command)
 	{
 		Thread worker = new Thread()
 		{
@@ -78,7 +79,8 @@ public class ExecuteShellCommand {
 					
 					while(p.isAlive())
 					{
-						BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+						InputStreamReader isr = new InputStreamReader(p.getInputStream());
+						BufferedReader reader = new BufferedReader(isr);
 						String line = "";
 						
 						while ((line = reader.readLine())!= null) 
@@ -89,11 +91,15 @@ public class ExecuteShellCommand {
 								ui.showLogcat();
 							}
 						}
+						reader.close();
+						isr.close();
 					}
 				}
 				catch (Exception e)
 				{
+					System.out.println("Error : ");
 					e.printStackTrace();
+					return;
 				}
 			}
 		};
@@ -101,7 +107,7 @@ public class ExecuteShellCommand {
 		worker.start();
 	}
 	
-	public static void readDevice(Benchmark ui, String command) 
+	public static void readDevice(Benchbase base, String command) 
 	{		
 		Thread worker = new Thread()
 		{
@@ -118,16 +124,21 @@ public class ExecuteShellCommand {
 						{
 							if(i == 2)
 							{
-								BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+								int listNum = 0;
+								InputStreamReader isr = new InputStreamReader(p.getInputStream());
+								BufferedReader reader = new BufferedReader(isr);
 								String line = "";
 								
 								while ((line = reader.readLine())!= null) 
 								{
 									if(line.equals("") == false)
 									{
-										ui.showDeviceList(line);
+										base.showDeviceList(line, listNum);
 									}
+									listNum++;
 								}
+								reader.close();
+								isr.close();
 							}
 						}
 					}
@@ -164,7 +175,8 @@ public class ExecuteShellCommand {
 					
 					while(p.isAlive())
 					{
-						BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+						InputStreamReader isr = new InputStreamReader(p.getInputStream());
+						BufferedReader reader = new BufferedReader(isr);
 						String line = "";
 						
 						while ((line = reader.readLine())!= null) 
@@ -177,13 +189,15 @@ public class ExecuteShellCommand {
 						}
 						
 						reader.close();
+						isr.close();
 					}
 				
 				
 					boolean flag = false;
 					
 					try {
-						BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+						InputStreamReader isr = new InputStreamReader(p.getErrorStream());
+						BufferedReader reader = new BufferedReader(isr);
 						String line = "";
 						
 						
@@ -200,6 +214,7 @@ public class ExecuteShellCommand {
 						}
 						
 						reader.close();
+						isr.close();
 					} catch (IOException e) {
 						e.printStackTrace();
 					} 

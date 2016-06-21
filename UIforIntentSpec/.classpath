@@ -6,5 +6,12 @@
 	<classpathentry kind="lib" path="tool/apktool.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="lib/poi-3.13-20150929.jar"/>
+	<classpathentry kind="lib" path="lib/poi-examples-3.13-20150929.jar"/>
+	<classpathentry kind="lib" path="lib/poi-excelant-3.13-20150929.jar"/>
+	<classpathentry kind="lib" path="lib/poi-ooxml-3.13-20150929.jar"/>
+	<classpathentry kind="lib" path="lib/poi-ooxml-schemas-3.13-20150929.jar"/>
+	<classpathentry kind="lib" path="lib/poi-scratchpad-3.13-20150929.jar"/>
+	<classpathentry kind="lib" path="lib/xmlbeans-2.6.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
