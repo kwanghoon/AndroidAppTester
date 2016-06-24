@@ -13,10 +13,8 @@ import java.util.Date;
 import java.util.Scanner;
 import java.util.Vector;
 
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.*;
+import org.apache.poi.xssf.usermodel.*;
 
 import kr_ac_yonsei_mobilesw_UI.GenAndroidTestCodeCommand;
 
@@ -420,10 +418,10 @@ public class GroupingResult {
 
 		FileInputStream file = null;
 		XSSFWorkbook workbook = null;		
-		XSSFWorkbook workbook2 = new XSSFWorkbook();
-		XSSFSheet sheet2 = workbook2.createSheet("Result");
-		XSSFRow row2 = null;
-		XSSFCell cell2 = null;
+		SXSSFWorkbook workbook2 = new SXSSFWorkbook();
+		SXSSFSheet sheet2 = workbook2.createSheet("Result");
+		SXSSFRow row2 = null;
+		SXSSFCell cell2 = null;
 
 		int l = 0;
 		int k = 0; // ∫§≈Õ≥ª ≥ÎµÂ ¿Œµ¶Ω∫
