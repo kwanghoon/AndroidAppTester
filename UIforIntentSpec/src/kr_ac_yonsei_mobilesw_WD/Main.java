@@ -19,16 +19,18 @@ public class Main {
 	static File Temp_Dir; // 테스트용으로 복사한 apk를 넣을 폴더
 	static File[] Filelist;
 	static File[] Temp_File;
+	static int exitvalue;
 
 	public static void main(String[] args)
 	{
 		System.out.println(args[0]);
-		Dir = new File(args[0]);
+		
+		Dir = new File(args[0]); 
 
 		MakeDummyFolder(args); // 더미폴더 생성
 		CopyAPK(); // apk파일 복사
-		//RunTest(); // 테스트 시작
-		Watch(); // 감시
+		RunTest(); // 테스트 시작
+		//		Watch(); // 감시
 
 		Temp_Dir.delete();
 	}
@@ -74,39 +76,48 @@ public class Main {
 
 	public static void RunTest()
 	{
-		Thread worker = new Thread()
-		{
-			public void run()
-			{
-				while(Temp_Dir.listFiles().length != 0)
-				{
-					String cmd = "java -cp \"bin;lib/*;tool/*;\" kr_ac_yonsei_mobilesw_UI.MainByCommand -mode 0 -count 1 -device 1 ";
-					Temp_File = Temp_Dir.listFiles();
-					cmd += Temp_File[0].getAbsolutePath();
-					System.out.println(cmd);
-					Process p;
-					try {
-						p = Runtime.getRuntime().exec(cmd);
-						while (p.isAlive()) {
-							BufferedReader reader = 
-									new BufferedReader(
-											new InputStreamReader(p.getInputStream()));
-							String line = "";
 
-							while ((line = reader.readLine())!= null) 
-							{
-								System.out.println(line);
-							}
-						}
-						
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+		while(Temp_Dir.listFiles().length != 0)
+		{
+			//					String cmd = "java -cp \"bin;lib/*;tool/*;\" kr_ac_yonsei_mobilesw_UI.MainByCommand -mode 0 -count 1 -device 1 ";
+			//					Temp_File = Temp_Dir.listFiles();
+			//					cmd += Temp_File[0].getAbsolutePath();
+			//					System.out.println(cmd);
+			//					Process p;
+			//					try {
+			//						p = Runtime.getRuntime().exec(cmd);
+			//						while (p.isAlive()) {
+			//							BufferedReader reader = 
+			//									new BufferedReader(
+			//											new InputStreamReader(p.getInputStream()));
+			//							String line = "";
+			//
+			//							while ((line = reader.readLine())!= null) 
+			//							{
+			//								System.out.println(line);
+			//							}
+			//						}
+			//						p.waitFor();
+			//						exitvalue = p.exitValue();
+			//						System.out.println(exitvalue);
+			
+			Temp_File = Temp_Dir.listFiles();
+			exitvalue = MainByCommand.main2(new String[]{"-mode", "0", "-count", "1", "-device", "1", Temp_File[0].getAbsolutePath()});
+			System.out.println(exitvalue);
+
+			if(exitvalue == 0) // 성공
+			{
+				try {
+					FileWriter output = new FileWriter(new File(Dir.getAbsolutePath() + "\\successlist.txt"), true);
+					output.append(Temp_File[0].getName() + "\n");
+					output.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
 				}
 			}
-		};
-		worker.start();
+			Temp_File[0].delete();
+		}
 	}
 
 	public static void Watch()
@@ -116,40 +127,8 @@ public class Main {
 		{
 			public void run()
 			{
-				while(Temp_Dir.listFiles().length != 0){
-					Process p;
-					try {
-						p = Runtime.getRuntime().exec(new String[]{"cmd.exe", "/k", "jps"});
-						while (p.isAlive()) {
-							BufferedReader reader = 
-									new BufferedReader(
-											new InputStreamReader(p.getInputStream()));
-							String temp = "";
-							String line = "";
-
-							while (!(temp = reader.readLine()).equals("")) 
-							{
-								System.out.println(temp);
-								line = temp;
-							}
-							if(line.contains("MainByCommand") == false){
-//								Temp_File[0].delete();
-//								RunTest();
-								System.out.println("false:");
-							}
-							p.destroy();
-						}
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					try {
-						Thread.currentThread().sleep(60000);
-					} catch (InterruptedException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-				}
+				String cmd = "java -cp \"bin;lib/*;tool/*;\" kr_ac_yonsei_mobilesw_UI.MainByCommand -mode 0 -count 1 -device 1 ";
+				//					Temp_File = Temp_Dir.listFiles();
 			}
 		};
 		worker.start();
