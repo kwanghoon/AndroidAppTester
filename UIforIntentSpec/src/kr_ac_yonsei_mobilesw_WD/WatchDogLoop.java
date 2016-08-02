@@ -1,6 +1,8 @@
 package kr_ac_yonsei_mobilesw_WD;
 
 import java.io.*;
+import java.util.ArrayList;
+
 import kr_ac_yonsei_mobilesw_UI.*;
 
 /*
@@ -13,35 +15,41 @@ import kr_ac_yonsei_mobilesw_UI.*;
  * 새로운 apk 실행
  * 성공한 목록 텍스트로 출력
  */
-public class Main {
+public class WatchDogLoop {
 
 	static File Dir; // apk파일이 들어있는 폴더
 	static File Temp_Dir; // 테스트용으로 복사한 apk를 넣을 폴더
 	static File[] Filelist;
 	static File[] Temp_File;
 	static int exitvalue;
-
+	static int argcount;
+	static ArrayList<String> arguments = new ArrayList<String>();
+	
 	public static void main(String[] args)
 	{
-		System.out.println(args[0]);
+		for(argcount = 0; argcount < args.length; argcount++)
+		{
+			arguments.add(args[argcount]);
+		}
+		Dir = new File(args[argcount-1]); 
 		
-		Dir = new File(args[0]); 
-
-		MakeDummyFolder(args); // 더미폴더 생성
-		CopyAPK(); // apk파일 복사
+		MakeDummyFolder(); // 더미폴더 생성, apk파일 복사
+		
 		RunTest(); // 테스트 시작
-		//		Watch(); // 감시
-
 		Temp_Dir.delete();
 	}
 
-	public static void MakeDummyFolder(String[] args)
+	public static void MakeDummyFolder()
 	// apk폴더 내부에 temp_test 폴더 생성
 	{
-		String Dirpath = args[0] + "\\temp_test";
+		String Dirpath = Dir.getAbsolutePath() + "\\temp_test";
 		Filelist = Dir.listFiles();
 		Temp_Dir = new File(Dirpath);
-		Temp_Dir.mkdirs();
+		if(Temp_Dir.exists() == false)
+		{
+			Temp_Dir.mkdirs();
+			CopyAPK(); // apk파일 복사
+		}
 	}
 
 	public static void CopyAPK()
@@ -79,31 +87,10 @@ public class Main {
 
 		while(Temp_Dir.listFiles().length != 0)
 		{
-			//					String cmd = "java -cp \"bin;lib/*;tool/*;\" kr_ac_yonsei_mobilesw_UI.MainByCommand -mode 0 -count 1 -device 1 ";
-			//					Temp_File = Temp_Dir.listFiles();
-			//					cmd += Temp_File[0].getAbsolutePath();
-			//					System.out.println(cmd);
-			//					Process p;
-			//					try {
-			//						p = Runtime.getRuntime().exec(cmd);
-			//						while (p.isAlive()) {
-			//							BufferedReader reader = 
-			//									new BufferedReader(
-			//											new InputStreamReader(p.getInputStream()));
-			//							String line = "";
-			//
-			//							while ((line = reader.readLine())!= null) 
-			//							{
-			//								System.out.println(line);
-			//							}
-			//						}
-			//						p.waitFor();
-			//						exitvalue = p.exitValue();
-			//						System.out.println(exitvalue);
-			
 			Temp_File = Temp_Dir.listFiles();
-			exitvalue = MainByCommand.main2(new String[]{"-mode", "0", "-count", "1", "-device", "1", Temp_File[0].getAbsolutePath()});
-			System.out.println(exitvalue);
+			arguments.remove(argcount-1);
+			arguments.add(Temp_File[0].getAbsolutePath());
+			exitvalue = MainByCommand.main2(arguments.toArray(new String[0]));
 
 			if(exitvalue == 0) // 성공
 			{
@@ -118,20 +105,5 @@ public class Main {
 			}
 			Temp_File[0].delete();
 		}
-	}
-
-	public static void Watch()
-	// jps 명령어 사용
-	{
-		Thread worker = new Thread()
-		{
-			public void run()
-			{
-				String cmd = "java -cp \"bin;lib/*;tool/*;\" kr_ac_yonsei_mobilesw_UI.MainByCommand -mode 0 -count 1 -device 1 ";
-				//					Temp_File = Temp_Dir.listFiles();
-			}
-		};
-		worker.start();
-
 	}
 }
