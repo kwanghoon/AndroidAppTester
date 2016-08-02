@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -50,6 +51,7 @@ public class BenchStart {
 	boolean flagUseIntentAssertion = false; // IntentAssert 
 	public boolean benchStartProcessingFlag = false;
 	private String log_file_name;
+	private static int restartCount = 0;
 
 	public void setLogFileName(String log_file_name) {
 		this.log_file_name = log_file_name;
@@ -213,6 +215,7 @@ public class BenchStart {
 								i--;
 								rebooted = true;
 								System.out.println("Reboot device");
+								restartCount++;
 								continue;
 							}
 							else
@@ -294,21 +297,22 @@ public class BenchStart {
 	public void makeCellStyle()
 	{
 		Font bk = workbook.createFont();
-		bk.setFontName("Courier New");
+		bk.setFontName("Arial");
 		bk.setColor(black);
 		Font bl = workbook.createFont();
-		bl.setFontName("Courier New");
+		bl.setFontName("Arial");
 		bl.setColor(blue);
 		Font g = workbook.createFont();
-		g.setFontName("Courier New");
+		g.setFontName("Arial");
 		g.setColor(green);
 		Font r = workbook.createFont();
-		r.setFontName("Courier New");
+		r.setFontName("Arial");
 		r.setColor(red);
 		Font o = workbook.createFont();
-		o.setFontName("Courier New");
+		o.setFontName("Arial");
 		o.setColor(orange);
 
+		
 		blackdefault = workbook.createCellStyle();
 		blackdefault.setFont(bk);
 		bluedefault = workbook.createCellStyle();
@@ -470,7 +474,7 @@ public class BenchStart {
 		//XSSFCellStyle format = new XSSFCellStyle(new StylesTable());
 		CellStyle format = workbook.createCellStyle();
 		Font font = workbook.createFont();
-		font.setFontName("Courier New");
+		font.setFontName("Arial");
 		format.setFont(font);
 
 		cell = row.createCell(0);
@@ -528,11 +532,11 @@ public class BenchStart {
 		//		}
 	}
 
-	final short black = (short)Color.black.getRGB();
-	final short red = (short)Color.RED.getRGB();
-	final short green = (short)Color.GREEN.getRGB();
-	final short orange = (short)Color.ORANGE.getRGB();
-	final short blue = (short)Color.blue.getRGB();
+	final short black = HSSFColor.BLACK.index;
+	final short red = HSSFColor.RED.index;
+	final short green = HSSFColor.GREEN.index;
+	final short orange = HSSFColor.ORANGE.index;;
+	final short blue = HSSFColor.BLUE.index;
 
 	final int DEFAULT = 0, BLUE = 1, GREEN = 2, ORANGE = 3, RED = 4;
 
@@ -698,7 +702,7 @@ public class BenchStart {
 
 			SXSSFRow row = sheet.createRow(nowRow); // nowRow-th row
 			analysisFormat = ChooseCellStyle(fontstyle, underbar);
-			for(int col=0; col<=7; col++) {
+			for(int col=0; col<7; col++) {
 				SXSSFCell cell = row.createCell(col);				
 				cell.setCellValue(base.modelLogcatView.getValueAt(i, col).toString());
 				cell.setCellStyle(analysisFormat);
@@ -854,5 +858,9 @@ public class BenchStart {
 		default:
 			return blackdefault;
 		}
+	}
+	
+	public static int getrestartCount(){
+		return restartCount;
 	}
 }

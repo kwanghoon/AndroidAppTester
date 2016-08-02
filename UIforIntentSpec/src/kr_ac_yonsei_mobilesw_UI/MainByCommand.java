@@ -26,6 +26,7 @@ public class MainByCommand{
 	private static String randomisfileName = "";
 	private static int mode = 0;
 	private static int count = 3;
+	private static double allTime = 0;
 	private static int deviceNum = 1;
 	private static Date startTime;
 	private static Date endTime;
@@ -96,12 +97,12 @@ public class MainByCommand{
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-					return;
+					return ;
 				}
 				else if(args[0].equals("-adbpath"))
 				{
 					System.out.println(adbPathString);
-					return;
+					return ;
 				}
 				else appPath = args[0];
 			}
@@ -110,18 +111,81 @@ public class MainByCommand{
 				if(args[0].equals("-adbpath"))
 				{
 					Config.putAdbPath(args[1] + "\\");
-					return;
+					return ;
 				}
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
 			System.out.println("Wrong Command\n-mode DIGIT\n-count DIGIT\n-adbpath PATH\n-device DIGIT\n-testcodedir PATH\n");
-			return;
+			return ;
 		}
 
 		MainByCommand main = new MainByCommand();
 		main.start();
-		Runtime.getRuntime().exit(0);
+		return ;
+	}
+	
+	public static int main2(String[] args)
+	{	
+		try {
+			if (args.length > 2) {
+				appPath = args[args.length - 1];
+				for (int i = 0; i < args.length; i += 2) {
+					if (args[i].equals("-mode")) {
+						mode = Integer.valueOf(args[i + 1]);
+					}
+					else if (args[i].equals("-count")) {
+						count = Integer.valueOf(args[i + 1]);
+					}
+					else if (args[i].equals("-adbpath")) {
+						adbPathString = args[i + 1] + "\\";
+						Config.putAdbPath(args[1]);
+					}
+					else if (args[i].equals("-device")) {
+						deviceNum = Integer.valueOf(args[i + 1]);
+					}
+					else if (args[i].equals("-testcodedir")) {
+						TestCodeDir = args[i + 1];
+					}
+				}
+			}
+			else if(args.length == 1)
+			{
+				if(args[0].equals("-device"))
+				{
+					String cmd = adbPathString + "adb devices";
+					try {
+						Runtime.getRuntime().exec(cmd);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					return 1;
+				}
+				else if(args[0].equals("-adbpath"))
+				{
+					System.out.println(adbPathString);
+					return 1;
+				}
+				else appPath = args[0];
+			}
+			else if(args.length == 2)
+			{
+				if(args[0].equals("-adbpath"))
+				{
+					Config.putAdbPath(args[1] + "\\");
+					return 1;
+				}
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("Wrong Command\n-mode DIGIT\n-count DIGIT\n-adbpath PATH\n-device DIGIT\n-testcodedir PATH\n");
+			return 1;
+		}
+
+		MainByCommand main = new MainByCommand();
+		main.start();
+		return 0;
 	}
 
 	public void start() 
@@ -153,6 +217,20 @@ public class MainByCommand{
 
 			//Wait
 			WaitEnd();
+			
+			int restartCount = BenchStart.getrestartCount();
+			String outputStr = "End of Test.\nTotal Time : " + allTime + "sec";
+			String outputStr2 = "Rebooting Time : " + restartCount*180 + "sec";
+			String outputStr3 = " Real Test Time : " + (allTime - restartCount*180) + "sec";
+			System.out.println(outputStr);
+			try {
+				FileWriter output = new FileWriter(new File("TimeLog.txt"), true);
+				output.append(outputStr + "\n" + outputStr2 + "\n" + outputStr3 + "\n\n");
+				output.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 			System.err.println("Error in Start : ");
@@ -160,10 +238,12 @@ public class MainByCommand{
 			return;
 		}
 	}
+	
 	public static void WriteLog(String Work)
 	{
 		double Time = (double)(endTime.getTime() - startTime.getTime())/1000;
-		String outputStr = PkgName + " " + Work + " : Started at " + startTime + ", Finished at " + endTime + ", " + Time + "sec";
+		allTime += Time;
+		String outputStr = Work + " : Started at " + startTime + ", Finished at " + endTime + ",\t" + Time + "sec";
 		System.out.println(outputStr);
 		try {
 			FileWriter output = new FileWriter(new File("TimeLog.txt"), true);
@@ -184,7 +264,7 @@ public class MainByCommand{
 		isApk = GenIntentSpecFromAPK.isApk();
 		internalFlag = GenIntentSpecFromAPK.existInternal();
 		endTime = new Date();
-		WriteLog("IntentSpec Generation");
+		WriteLog(PkgName + "\nIntentSpec Generation");
 		StepDone = 1;
 		notifyAll();
 	}
