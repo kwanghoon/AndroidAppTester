@@ -47,6 +47,7 @@ public class Watch {
 						else // 테스트가 아직 남아있음
 						{
 							System.out.println("fail\n");
+							Temp_Dir.listFiles()[0].delete();
 							getpid();
 							killcmd();
 							startWatchDogLoop();
