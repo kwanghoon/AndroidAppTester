@@ -24,7 +24,7 @@ public class WatchDogLoop {
 	static int exitvalue;
 	static int argcount;
 	static ArrayList<String> arguments = new ArrayList<String>();
-	
+
 	public static void main(String[] args)
 	{
 		for(argcount = 0; argcount < args.length; argcount++)
@@ -32,9 +32,9 @@ public class WatchDogLoop {
 			arguments.add(args[argcount]);
 		}
 		Dir = new File(args[argcount-1]); 
-		
+
 		MakeDummyFolder(); // 더미폴더 생성, apk파일 복사
-		
+
 		RunTest(); // 테스트 시작
 		Temp_Dir.delete();
 	}
@@ -103,7 +103,7 @@ public class WatchDogLoop {
 					e1.printStackTrace();
 				}
 			}
-			Temp_File[0].delete();
+			Runtime.getRuntime().exit(0);
 		}
 	}
 }

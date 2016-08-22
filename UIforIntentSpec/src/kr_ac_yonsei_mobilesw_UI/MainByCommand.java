@@ -182,7 +182,8 @@ public class MainByCommand{
 			System.out.println("Wrong Command\n-mode DIGIT\n-count DIGIT\n-adbpath PATH\n-device DIGIT\n-testcodedir PATH\n");
 			return 1;
 		}
-
+		
+		
 		MainByCommand main = new MainByCommand();
 		main.start();
 		return 0;
