@@ -36,7 +36,7 @@ public class GroupingResult {
 		long readTime = endTime.getTime() - startTime.getTime();	
 		randomisfileName = String.valueOf(readTime) + ".randomis";
 		writeFile(excelFileName, list, readTime);
-	}
+	} 
 
 	// 그룹화 시작 함수(UI 프로그램으로 실행할 시 사용)
 	public void start(final String fileName){
