@@ -103,7 +103,6 @@ public class WatchDogLoop {
 					e1.printStackTrace();
 				}
 			}
-			Temp_File[0].delete();
 			Runtime.getRuntime().exit(0);
 		}
 	}

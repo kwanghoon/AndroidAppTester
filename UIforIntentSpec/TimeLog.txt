@@ -1,0 +1,5 @@
+null
+IntentSpec Generation : Started at Sat Aug 20 19:31:59 KST 2016, Finished at Sat Aug 20 19:31:59 KST 2016,	0.006sec
+Install APK : Started at Sat Aug 20 19:31:59 KST 2016, Finished at Sat Aug 20 19:31:59 KST 2016,	0.0sec
+AdbCommand Generation : Started at Sat Aug 20 19:31:59 KST 2016, Finished at Sat Aug 20 19:32:01 KST 2016,	2.444sec
+Test AdbCommand : Started at Sat Aug 20 19:32:01 KST 2016, Finished at Sat Aug 20 19:32:03 KST 2016,	1.467sec

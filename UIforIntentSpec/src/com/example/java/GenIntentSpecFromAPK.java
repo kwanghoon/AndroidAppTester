@@ -389,7 +389,7 @@ public class GenIntentSpecFromAPK {
 
 		requestType = Type.All;
 		String apkfile = "";
-
+		
 		if (args.length >= 1) {		
 			try {
 				if(args[0].equals("-ui"))
@@ -419,7 +419,6 @@ public class GenIntentSpecFromAPK {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-
 			try {
 				String currentWorkingDir = new File("").getAbsolutePath();
 				if (DEBUG) System.out.println("CWD: " + currentWorkingDir);
@@ -467,17 +466,16 @@ public class GenIntentSpecFromAPK {
 					while (p.isAlive()) {
 						BufferedReader reader = 
 								new BufferedReader(
-										new InputStreamReader(p.getInputStream()));
+										new InputStreamReader(p.getErrorStream()));
 						String line = "";
 
 						while ((line = reader.readLine())!= null) 
 						{
 							if(line.equals("") == false)
 							{
-								if (DEBUG) System.out.println(line);
+								/*if (DEBUG)*/ System.out.println(line);
 							}
 						}
-
 					}
 
 					find(xmlfile);					

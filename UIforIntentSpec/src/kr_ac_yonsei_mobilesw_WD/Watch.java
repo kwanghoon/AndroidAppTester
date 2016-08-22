@@ -23,6 +23,12 @@ public class Watch {
 		startWatchDogLoop();
 		while(true)
 		{
+			try {
+				Thread.currentThread().sleep(60000);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			Process p;
 			try {
 				p = Runtime.getRuntime().exec(new String[]{"cmd.exe", "/k", "jps"});
@@ -63,12 +69,6 @@ public class Watch {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			try {
-				Thread.currentThread().sleep(60000);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
 		}
 	}
 
@@ -103,7 +103,7 @@ public class Watch {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} 
 	}
 
 	public static void killcmd()
