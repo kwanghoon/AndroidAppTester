@@ -1,4 +1,4 @@
-Copyright(C) 2015 Kwanghoon Choi All Rights Reserved
+Copyright(C) 2015-2017 Kwanghoon Choi All Rights Reserved
 
 Android App Tester
 
@@ -10,4 +10,9 @@ Android App Tester
    - Automatic Generation of Intent Specs from APK
 
 
-Contributed by Myung-Pil Ko and Sung-Bin Yoon.
+Contributors
+ - Choi, Kwanghoon
+ - Ko, Myung-Pil
+ - Lee, Seungwhi
+ - Kim, Hyunsoon
+ - Yoon, Sung-Bin
