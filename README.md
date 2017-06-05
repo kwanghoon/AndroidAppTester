@@ -1,4 +1,4 @@
-Copyright(C) 2015-2017 Kwanghoon Choi All Rights Reserved
+Copyright(C) 2015- Kwanghoon Choi All Rights Reserved
 
 Android App Tester
 
